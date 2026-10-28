@@ -1,0 +1,4 @@
+caso_id,descripcion,latitud,longitud,fecha_observacion,fecha_reporte,origen_dato,motivo
+amb_01,Basura,-12.05800,-75.21900,2026-10-25T09:00:00-05:00,2026-10-25T09:20:00-05:00,simulado,Descripcion insuficiente para decidir identidad
+inv_01,Hay residuos,98.00000,-75.21900,2026-10-25T09:00:00-05:00,2026-10-25T09:20:00-05:00,simulado,Latitud invalida: rechazar antes del modelo
+inv_02,Monton de desperdicios,-12.05900,-75.21900,2026-10-26T10:00:00-05:00,2026-10-25T09:20:00-05:00,simulado,Fecha de envio anterior a observacion: revisar calidad de datos
