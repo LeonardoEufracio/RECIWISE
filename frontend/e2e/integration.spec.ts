@@ -1,4 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
+import type { ReportCreate } from '../src/types'
+
+declare global { interface Window { gpsCalls: number } }
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64')
 const citizenId = '00000000-0000-4000-8000-000000000001'
@@ -26,6 +29,32 @@ async function login(page: Page) {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
 }
 
+async function mockCitizenForm(page: Page) {
+  await mockAuth(page)
+  const submissions: ReportCreate[] = []
+  await page.route('http://127.0.0.1:8000/**', (route) => {
+    const request = route.request()
+    const path = new URL(request.url()).pathname
+    if (path === '/me') return route.fulfill({ json: { id: citizenId, role: 'ciudadano' } })
+    if (path === '/reports' && request.method() === 'POST') {
+      const payload = request.postDataJSON() as ReportCreate
+      submissions.push(payload)
+      return route.fulfill({ status: 201, json: { ...report, ...payload } })
+    }
+    if (path === '/reports/mine' || path.endsWith('/photos')) return route.fulfill({ json: [] })
+    throw new Error(`Ruta inesperada: ${path}`)
+  })
+  return submissions
+}
+
+async function countGpsRequests(page: Page) {
+  await page.addInitScript(() => {
+    window.gpsCalls = 0
+    const original = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation)
+    navigator.geolocation.getCurrentPosition = (...args) => { window.gpsCalls += 1; original(...args) }
+  })
+}
+
 test('el navegador se comunica con FastAPI real y respeta CORS', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Comprobar /health' }).click()
@@ -40,6 +69,7 @@ test('el navegador se comunica con FastAPI real y respeta CORS', async ({ page }
 
 test('ciudadano: Leaflet, registro, fotografía y sesión con servicios simulados', async ({ page }) => {
   await mockAuth(page)
+  await countGpsRequests(page)
   let created = false
   let uploaded = false
   await page.route('http://127.0.0.1:8000/**', async (route) => {
@@ -72,9 +102,28 @@ test('ciudadano: Leaflet, registro, fotografía y sesión con servicios simulado
   await page.route('https://storage.test/**', (route) => route.fulfill({ contentType: 'image/png', body: png }))
   await login(page)
   await page.getByLabel('Descripción', { exact: true }).fill(report.description)
+  await expect(page.locator('input[name="latitude"], input[name="longitude"]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Elegir en el mapa', exact: true }).click()
   await page.locator('.map').click({ position: { x: 140, y: 140 } })
-  await expect(page.getByLabel('Latitud', { exact: true })).not.toHaveValue('')
-  await expect(page.locator('.map .leaflet-interactive')).toHaveCount(1)
+  const summary = page.locator('.location-summary p').first()
+  const firstLocation = await summary.innerText()
+  const marker = page.locator('.location-map .leaflet-marker-icon')
+  await expect(marker).toHaveCount(1)
+  await page.getByRole('button', { name: 'Confirmar ubicación', exact: true }).click()
+  expect(created).toBe(false)
+  await page.getByRole('button', { name: 'Corregir ubicación', exact: true }).click()
+  const box = (await marker.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width / 2 + 50, box.y + box.height / 2 + 20, { steps: 10 })
+  await page.mouse.up()
+  await expect(summary).not.toHaveText(firstLocation)
+  await page.getByRole('button', { name: 'Registrar reporte', exact: true }).click()
+  await expect(page.getByText('Selecciona y confirma la ubicación del reporte antes de enviarlo.')).toBeVisible()
+  expect(created).toBe(false)
+  await page.getByRole('button', { name: 'Confirmar ubicación', exact: true }).click()
+  expect(created).toBe(false)
+  expect(await page.evaluate(() => window.gpsCalls)).toBe(0)
   await page.getByRole('button', { name: 'Registrar reporte', exact: true }).click()
   await expect(page.getByText(/Reporte registrado/)).toBeVisible()
   const input = page.getByLabel(/Fotografía \(JPG/)
@@ -86,6 +135,67 @@ test('ciudadano: Leaflet, registro, fotografía y sesión con servicios simulado
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeVisible()
   await expect(page.getByText(report.description, { exact: true })).toHaveCount(0)
+})
+
+test('GPS: ubicación nativa simulada en Chrome, precisión y envío solo tras confirmar', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation'], { origin: 'http://localhost:5173' })
+  await context.setGeolocation({ latitude: -12.07, longitude: -75.22, accuracy: 18 })
+  await countGpsRequests(page)
+  const submissions = await mockCitizenForm(page)
+  await login(page)
+  await expect(page.getByRole('heading', { name: 'Registrar acumulación de basura' })).toBeVisible()
+  expect(await page.evaluate(() => window.gpsCalls)).toBe(0)
+  const storage = await page.evaluate(() => [JSON.stringify({ ...localStorage }), JSON.stringify({ ...sessionStorage })])
+  await page.getByRole('button', { name: 'Usar mi ubicación', exact: true }).click()
+  await expect(page.getByText('Precisión estimada: ±18 m.')).toBeVisible()
+  await expect(page.locator('.location-map .leaflet-marker-icon')).toHaveCount(1)
+  expect(submissions).toEqual([])
+  await page.getByRole('button', { name: 'Confirmar ubicación', exact: true }).click()
+  expect(submissions).toEqual([])
+  expect(await page.evaluate(() => [JSON.stringify({ ...localStorage }), JSON.stringify({ ...sessionStorage })])).toEqual(storage)
+  await page.getByLabel('Descripción', { exact: true }).fill(report.description)
+  await page.getByRole('button', { name: 'Registrar reporte', exact: true }).click()
+  await expect(page.getByText(/Reporte registrado/)).toBeVisible()
+  expect(submissions).toHaveLength(1)
+  expect(submissions[0].latitude).toBe(-12.07)
+  expect(submissions[0].longitude).toBe(-75.22)
+  expect(submissions[0]).not.toHaveProperty('accuracy')
+  expect(await page.evaluate(() => window.gpsCalls)).toBe(1)
+})
+
+test('GPS denegado: mensaje comprensible y alternativa manual', async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.geolocation.getCurrentPosition = (_success, failure) => failure?.({
+      code: 1, message: 'denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3,
+    })
+  })
+  const submissions = await mockCitizenForm(page)
+  await login(page)
+  await page.getByRole('button', { name: 'Usar mi ubicación', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Se denegó el permiso de ubicación')
+  await page.getByRole('button', { name: 'Elegir en el mapa', exact: true }).click()
+  await page.locator('.map').click({ position: { x: 150, y: 140 } })
+  await expect(page.getByRole('alert')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Confirmar ubicación', exact: true })).toBeEnabled()
+  expect(submissions).toEqual([])
+})
+
+test.describe('Selección táctil', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  test('permite tocar el mapa en una pantalla móvil y confirmar', async ({ page }) => {
+    const submissions = await mockCitizenForm(page)
+    await login(page)
+    await page.getByRole('button', { name: 'Elegir en el mapa', exact: true }).tap()
+    const map = page.locator('.location-map')
+    await map.scrollIntoViewIfNeeded()
+    const box = (await map.boundingBox())!
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+    await expect(page.locator('.location-map .leaflet-marker-icon')).toHaveCount(1)
+    await page.getByRole('button', { name: 'Confirmar ubicación', exact: true }).tap()
+    await expect(page.getByText(/Ubicación confirmada/)).toBeVisible()
+    expect(submissions).toEqual([])
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  })
 })
 
 test('encargado: puntos Leaflet, filtro y vista móvil con servicios simulados', async ({ page }) => {

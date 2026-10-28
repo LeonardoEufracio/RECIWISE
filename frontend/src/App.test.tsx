@@ -2,9 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import App from './App'
-import type { Report } from './types'
+import type { Coordinates, Report } from './types'
 
 vi.mock('./MapView', () => ({ default: () => <div aria-label="Mapa Leaflet" /> }))
+vi.mock('./LocationMap', () => ({ default: ({ onPick, editable }: { onPick: (point: Coordinates) => void; editable: boolean }) =>
+  <button type="button" disabled={!editable} onClick={() => onPick({ latitude: -12.05, longitude: -75.2 })}>Seleccionar punto de prueba</button> }))
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 const config = { apiUrl: 'http://api.test', supabaseUrl: 'https://project.supabase.co', publishableKey: 'sb_publishable_test' }
@@ -38,6 +40,8 @@ function json(value: unknown, status = 200) { return new Response(JSON.stringify
 
 describe('Flujos de la interfaz con Auth y API simulados', () => {
   it('inicia sesión con una cuenta existente y usa el rol de /me, ignorando user_metadata', async () => {
+    const getCurrentPosition = vi.fn()
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } })
     const { auth, client } = authMock(null)
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => String(url).endsWith('/me')
       ? json({ id: 'citizen-1', role: 'ciudadano' }) : json([]))
@@ -51,6 +55,7 @@ describe('Flujos de la interfaz con Auth y API simulados', () => {
     expect(screen.queryByRole('heading', { name: 'Reportes municipales' })).toBeNull()
     expect(screen.queryByRole('combobox')).toBeNull()
     expect(fetcher.mock.calls.some(([url]) => String(url).includes('/municipal/'))).toBe(false)
+    expect(getCurrentPosition).not.toHaveBeenCalled()
   })
 
   it('registra un reporte, sube una foto con file y visualiza la URL firmada', async () => {
@@ -70,8 +75,9 @@ describe('Flujos de la interfaz con Auth y API simulados', () => {
     vi.stubGlobal('fetch', fetcher)
     render(<App supabase={client} config={config} />)
     fireEvent.change(await screen.findByLabelText('Descripción'), { target: { value: report.description } })
-    fireEvent.change(screen.getByLabelText('Latitud'), { target: { value: '-12.05' } })
-    fireEvent.change(screen.getByLabelText('Longitud'), { target: { value: '-75.2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir en el mapa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Seleccionar punto de prueba' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar ubicación' }))
     fireEvent.click(screen.getByRole('button', { name: 'Registrar reporte' }))
     await screen.findByText(/Reporte registrado/)
     const createCall = fetcher.mock.calls.find(([url, init]) => String(url).endsWith('/reports') && init?.method === 'POST')!

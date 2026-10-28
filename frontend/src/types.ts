@@ -1,6 +1,13 @@
 // Contratos de app/schemas.py. Los permisos siempre los decide FastAPI.
 export type Role = 'ciudadano' | 'encargado_municipal' | 'chofer'
 export interface Actor { id: string; role: Role }
+export interface Coordinates { latitude: number; longitude: number }
+// Solo estado temporal de la interfaz; no forma parte del contrato de FastAPI.
+export interface ReportLocation extends Coordinates {
+  source: 'device' | 'map'
+  accuracy?: number
+  confirmed: boolean
+}
 export interface ReportCreate {
   description: string
   latitude: number
