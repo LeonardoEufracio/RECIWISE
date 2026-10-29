@@ -1,0 +1,2 @@
+# Dependencia opcional del prototipo. No forma parte del arranque de FastAPI.
+sentence-transformers

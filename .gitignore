@@ -12,3 +12,7 @@ frontend/playwright-report/
 frontend/.env*
 !frontend/.env.example
 .npm-cache/
+_actualizacion_sprint1/
+d3/output/comparaciones_*.csv
+.test-artifacts/
+.venv-d3/

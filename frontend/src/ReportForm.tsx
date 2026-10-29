@@ -36,7 +36,8 @@ export default function ReportForm({ api, onCreated }: { api: Api; onCreated: (r
           <label>Fecha y hora de observación<input name="observed_at" type="datetime-local" defaultValue={localDateTime()} required /><span className="hint">Hora local del dispositivo; se envía con zona horaria.</span></label>
           <label>Tipo de residuo (opcional)<input name="waste_type" maxLength={80} /></label>
         </div>
-        <button>{busy ? 'Registrando…' : 'Registrar reporte'}</button>
+        {!location?.confirmed && <p className="hint">Para registrar, elige el lugar y confirma el marcador.</p>}
+        <button disabled={busy || !location?.confirmed}>{busy ? 'Registrando…' : 'Registrar reporte'}</button>
       </fieldset>
     </form>
     {error && <p className="error" role="alert">{error}</p>}

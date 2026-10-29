@@ -27,6 +27,9 @@ function setup() {
   return { api, onCreated, ...view }
 }
 function click(name: string) { fireEvent.click(screen.getByRole('button', { name })) }
+// La interfaz bloquea el botón; comprobar también la validación del handler
+// cuando se intenta enviar por Enter o por código.
+function attemptSubmit() { fireEvent.submit(screen.getByLabelText('Descripción').closest('form')!) }
 function gpsSuccess(accuracy = 12) {
   act(() => gps.mock.calls[0][0]({ coords: { latitude: -12.07, longitude: -75.22, accuracy } } as GeolocationPosition))
 }
@@ -36,7 +39,8 @@ describe('Ubicación ciudadana y consentimiento', () => {
     const { api, container } = setup()
     expect(gps).not.toHaveBeenCalled()
     expect(container.querySelector('input[name="latitude"], input[name="longitude"]')).toBeNull()
-    click('Registrar reporte')
+    expect((screen.getByRole('button', { name: 'Registrar reporte' }) as HTMLButtonElement).disabled).toBe(true)
+    attemptSubmit()
     await screen.findByText('Selecciona y confirma la ubicación del reporte antes de enviarlo.')
     expect(api).not.toHaveBeenCalled()
   })
@@ -45,10 +49,12 @@ describe('Ubicación ciudadana y consentimiento', () => {
     const save = vi.spyOn(Storage.prototype, 'setItem')
     const { api, onCreated } = setup()
     click('Elegir en el mapa'); click('Tocar mapa de prueba')
-    click('Registrar reporte')
+    expect((screen.getByRole('button', { name: 'Registrar reporte' }) as HTMLButtonElement).disabled).toBe(true)
+    attemptSubmit()
     await screen.findByText('Selecciona y confirma la ubicación del reporte antes de enviarlo.')
     expect(api).not.toHaveBeenCalled()
     click('Confirmar ubicación')
+    expect((screen.getByRole('button', { name: 'Registrar reporte' }) as HTMLButtonElement).disabled).toBe(false)
     expect(api).not.toHaveBeenCalled()
     expect(save).not.toHaveBeenCalled()
     click('Registrar reporte')
@@ -69,6 +75,8 @@ describe('Ubicación ciudadana y consentimiento', () => {
     gpsSuccess()
     expect(screen.getByText(/Precisión estimada: ±12 m/)).toBeTruthy()
     expect(screen.getByText(/-12.070000, -75.220000/)).toBeTruthy()
+    expect(screen.getByText(/Origen: ubicación del dispositivo/)).toBeTruthy()
+    expect(screen.getByText(/no solo dónde estás/)).toBeTruthy()
     expect(api).not.toHaveBeenCalled()
     click('Confirmar ubicación')
     expect(api).not.toHaveBeenCalled()
@@ -86,7 +94,7 @@ describe('Ubicación ciudadana y consentimiento', () => {
     expect((screen.getByRole('button', { name: 'Arrastrar marcador de prueba' }) as HTMLButtonElement).disabled).toBe(true)
     click('Corregir ubicación'); click('Arrastrar marcador de prueba')
     expect(screen.queryByText(/Precisión estimada/)).toBeNull()
-    click('Registrar reporte')
+    attemptSubmit()
     await screen.findByText('Selecciona y confirma la ubicación del reporte antes de enviarlo.')
     expect(api).not.toHaveBeenCalled()
     click('Confirmar ubicación'); click('Registrar reporte')
@@ -126,7 +134,7 @@ describe('Ubicación ciudadana y consentimiento', () => {
   it('deshabilita la confirmación anterior al volver a pedir GPS', async () => {
     const { api } = setup()
     click('Elegir en el mapa'); click('Tocar mapa de prueba'); click('Confirmar ubicación')
-    click('Usar mi ubicación'); click('Registrar reporte')
+    click('Usar mi ubicación'); attemptSubmit()
     await screen.findByText('Selecciona y confirma la ubicación del reporte antes de enviarlo.')
     expect(api).not.toHaveBeenCalled()
     expect((screen.getByRole('button', { name: 'Confirmar ubicación' }) as HTMLButtonElement).disabled).toBe(true)

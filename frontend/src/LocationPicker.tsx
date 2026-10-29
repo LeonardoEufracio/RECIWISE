@@ -90,6 +90,7 @@ export default function LocationPicker({ location, onChange, disabled }: {
     </>}
     {location && <div className="location-summary" aria-live="polite">
       <p><strong>Punto seleccionado:</strong> {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
+      <p className="hint">Origen: {location.source === 'device' ? 'ubicación del dispositivo' : 'selección en el mapa'}. Comprueba que el marcador señale la acumulación, no solo dónde estás.</p>
       {location.source === 'device' && location.accuracy !== undefined && <p>Precisión estimada: ±{Math.round(location.accuracy)} m.</p>}
       {location.confirmed
         ? <><p className="success">Ubicación confirmada. Se incluirá al pulsar «Registrar reporte».</p>

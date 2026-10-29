@@ -92,7 +92,7 @@ El formulario ya no presenta entradas obligatorias de latitud y longitud. Esos d
 
 1. Pulsar **Elegir en el mapa**. Esta opción no solicita GPS.
 2. Tocar o hacer clic en el lugar de la acumulación. Aparece un marcador que se puede arrastrar para ajustar el punto. Las coordenadas se muestran como texto de referencia, sin entradas técnicas que completar.
-3. Intentar registrar sin confirmar: se muestra el error y no se hace `POST /reports`.
+3. Sin una selección confirmada, **Registrar reporte** permanece desactivado. La validación del envío también rechaza una selección ausente o sin confirmar; no se hace `POST /reports`.
 4. Pulsar **Confirmar ubicación**. Para cambiar el lugar después, pulsar **Corregir ubicación**, mover el marcador y confirmar de nuevo.
 5. Pulsar **Registrar reporte**. El selector se limpia al guardar correctamente; si falla el envío, la selección permanece para poder reintentar.
 

@@ -46,8 +46,8 @@ El GPS físico y los permisos del sistema deben probarse en un dispositivo real.
 
 Las pruebas automáticas no validan credenciales reales de Supabase, firma JWKS del proyecto, escritura real en PostgreSQL ni subida al bucket privado. Esos pasos quedan pendientes de integración con las cuentas existentes; no se crearon reportes en Supabase durante esta revisión.
 
-## Actualización adicional y siguientes pasos
+## Actualización localizada y siguientes pasos
 
-La revisión del proyecto, las ramas remotas y la búsqueda por nombre en las carpetas locales consultadas no identificó otra actualización Sprint 1. Para comparar e integrar esa entrega hace falta su ruta local exacta.
+Después de esta verificación se recibió la ruta exacta `_actualizacion_sprint1`. Su contenido se comparó con el proyecto y se integró; ver [comparación y resultados posteriores](INTEGRACION_SPRINT1.md).
 
-La carpeta `d3/` actual contiene preparación de datos simulados y funciones geográficas/temporales; todavía no contiene el nuevo prototipo de similitud semántica mencionado. D3 y las mejoras de recursos municipales quedan para la siguiente etapa. Esta verificación de ubicación no declara completado el Sprint 1 entero.
+El prototipo semántico ya se incorporó a `d3/`, junto con pruebas sin descargar el modelo. La ejecución del modelo real, las mejoras de recursos municipales y la validación con cuentas reales siguen pendientes. Esta verificación de ubicación no declara completado el Sprint 1 entero.

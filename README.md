@@ -1,8 +1,10 @@
 # RECIWISE — Backend y base de datos inicial (Sprint 1)
 
-**Estado real:** incluye migraciones versionadas, API FastAPI de reportes y recursos y un frontend local de pruebas. La integración autenticada con las cuentas y el almacenamiento reales de Supabase sigue pendiente de validación; no se ha desplegado el aplicativo. La IA, aprobación de rutas y ejecución por chofer **aún no están implementadas**.
+**Estado real:** incluye migraciones versionadas, API FastAPI de reportes y recursos, un frontend local de pruebas y un prototipo D3 de similitud. La integración autenticada con las cuentas y el almacenamiento reales de Supabase sigue pendiente de validación; no se ha desplegado el aplicativo. La agrupación automática, aprobación de rutas y ejecución por chofer **aún no están implementadas**.
 
 **Frontend de pruebas (28/10/2026):** [instrucciones de arranque, contratos y resultados comprobados](frontend/README.md). Incluye React + Vite, Supabase Auth, Leaflet, fotos e historial HTTP. El código funcional de `app/` se conserva sin cambios.
+
+**Actualización Sprint 1 (29/10/2026):** [comparación e integración de la entrega local](docs/INTEGRACION_SPRINT1.md). Se integraron las diferencias del formulario GPS/mapa y el [prototipo semántico D3](d3/SPRINT1_MODELO.md), manteniendo los contratos y permisos existentes. La inferencia con el modelo real sigue pendiente.
 
 ## Arquitectura
 
