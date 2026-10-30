@@ -11,12 +11,13 @@ os.environ.setdefault("SUPABASE_URL", "https://example.supabase.co")
 
 from app.db import Base, get_db
 from app.main import app
+from app import main
 from app.models import Profile
 from app.security import Actor, get_current_actor
 
 
 @pytest.fixture
-def test_env():
+def test_env(monkeypatch):
     engine = create_engine("sqlite+pysqlite:///:memory:",
                            connect_args={"check_same_thread": False}, poolclass=StaticPool)
     @event.listens_for(engine, "connect")
@@ -24,6 +25,10 @@ def test_env():
         conn.execute("PRAGMA foreign_keys=ON")
 
     Base.metadata.create_all(engine)
+    # SQLite unit tests replace only verification; they do not prove schema 003.
+    # The production app has no switch or environment variable to skip its guard.
+    monkeypatch.setattr(main, "get_engine", lambda: engine)
+    monkeypatch.setattr(main, "verify_schema", lambda engine: None)
     citizen_id, second_id, manager_id, driver_id = [uuid.uuid4() for _ in range(4)]
     with Session(engine) as db:
         for uid, role in [(citizen_id, "ciudadano"), (second_id, "ciudadano"),

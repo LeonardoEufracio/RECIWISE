@@ -20,12 +20,15 @@ class ReportCreate(BaseModel):
     observed_at: datetime
     waste_type: str | None = Field(default=None, max_length=80)
 
-    @field_validator("description")
+    # Recortar antes de aplicar min_length/max_length del campo.
+    @field_validator("description", mode="before")
     @classmethod
-    def reject_blank(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("La descripción no puede estar vacía")
-        return v.strip()
+    def strip_description(cls, v: object) -> object:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                raise ValueError("La descripción no puede estar vacía")
+        return v
 
     @field_validator("observed_at")
     @classmethod
