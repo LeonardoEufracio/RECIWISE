@@ -36,10 +36,10 @@ def test_photo_upload_listing_limits_and_roles(test_env, monkeypatch):
     client, state, _ = test_env
     stored = []
 
-    async def store(path, contents, content_type):
+    def store(path, contents, content_type):
         stored.append((path, contents, content_type))
 
-    async def sign(path):
+    def sign(path):
         return f"https://storage.test/{path}?temporary=1"
 
     monkeypatch.setattr(main, "put_private_image", store)

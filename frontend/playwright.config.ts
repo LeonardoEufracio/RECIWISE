@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/integrated/**', // Requires its own isolated PostgreSQL/JWT runner.
   workers: 1,
   reporter: 'list',
   use: {

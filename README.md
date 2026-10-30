@@ -1,8 +1,10 @@
 # RECIWISE — Backend y base de datos inicial (Sprint 1)
 
-**Estado real:** incluye migraciones versionadas, API FastAPI de reportes y recursos, un frontend local de pruebas y un prototipo D3 de similitud. La integración autenticada con las cuentas y el almacenamiento reales de Supabase sigue pendiente de validación; no se ha desplegado el aplicativo. La agrupación automática, aprobación de rutas y ejecución por chofer **aún no están implementadas**.
+**Estado real (29/10/2026):** API FastAPI de reportes/recursos, frontend React de pruebas y prototipo D3 de similitud. D2 tiene concurrencia, recuperación y guardia de esquema comprobadas en PostgreSQL local aislado con Storage simulado; la evidencia manual anterior de Supabase se distingue de esa suite en [API_SPRINT1.md](docs/API_SPRINT1.md). La agrupación operativa, aprobación de rutas y ejecución por chofer **aún no están implementadas**. La aceptación integrada y el despliegue de la versión nueva siguen pendientes.
 
-**Frontend de pruebas (28/10/2026):** [instrucciones de arranque, contratos y resultados comprobados](frontend/README.md). Incluye React + Vite, Supabase Auth, Leaflet, fotos e historial HTTP. El código funcional de `app/` se conserva sin cambios.
+**Prioridad hackatón: 19 de noviembre de 2026.** Se conserva el proyecto Supabase principal; no se crea otro proyecto ahora, no se aplica 003 al compartido ni se hacen pruebas destructivas allí. Desarrollo y regresión continúan localmente. **GO local / NO-GO para desplegar esta rama en el principal**, que requiere esquema 003. Ver [pendientes estrictos y secuencia D2](docs/PLAN_D2_HACKATON.md).
+
+**Frontend de pruebas (28/10/2026):** [contratos y resultados comprobados](frontend/README.md). Incluye React + Vite, Supabase Auth, Leaflet, fotos e historial HTTP. Sus instrucciones iniciales de esquema deben leerse con el requisito 003 del backend actual, explicado abajo.
 
 **Actualización Sprint 1 (29/10/2026):** [comparación e integración de la entrega local](docs/INTEGRACION_SPRINT1.md). Se integraron las diferencias del formulario GPS/mapa y el [prototipo semántico D3](d3/SPRINT1_MODELO.md), manteniendo los contratos y permisos existentes. La inferencia con el modelo real sigue pendiente.
 
@@ -28,25 +30,30 @@ RECIWISE/
 │   ├── models.py       # modelos de Sprint 1
 │   ├── schemas.py      # validación de entrada/salida
 │   ├── security.py     # validación de JWT Supabase y roles
-│   └── storage.py      # bucket privado y URLs de lectura temporales
+│   ├── storage.py      # bucket privado y URLs de lectura temporales
+│   ├── photo_uploads.py # cuota, intención durable y compensación
+│   ├── reconcile_photos.py # CLI de diagnóstico/recuperación
+│   └── schema_guard.py # compatibilidad 003, sin migración automática
 ├── migrations/
 │   ├── 001_sprint1.sql # reportes, perfiles, eventos, recursos, revisión
-│   └── 002_sprint2_3_estructura.sql # tablas de rutas, paradas e incidencias
+│   ├── 002_sprint2_3_estructura.sql # tablas de rutas, paradas e incidencias
+│   └── 003_sprint1_concurrencia.sql # exclusiones, posiciones y registro durable
+├── docs/PLAN_D2_HACKATON.md
 ├── docs/CONTRATOS_D3.md
 ├── tests/
 ├── .env.example
 └── requirements.txt
 ```
 
-## 1. Crear el proyecto Supabase
+## 1. Proyecto Supabase y compatibilidad
 
-1. Crear el proyecto y anotar **Project URL**, la cadena PostgreSQL, y la **service role key**; no subir secretos al repositorio.
-2. En el panel SQL Editor ejecutar **primero** `migrations/001_sprint1.sql`. La migración crea perfiles, reportes, eventos y relaciones, recursos y un bucket privado de imágenes.
-3. La migración `002_sprint2_3_estructura.sql` es opcional ahora: prepara tablas de planificación para el Sprint 2 y de ejecución para el Sprint 3.
-4. En Supabase Auth habilitar el proveedor deseado para el piloto (correo/contraseña, por ejemplo). El disparador crea cada nuevo perfil como `ciudadano`. Para un encargado o chofer, un administrador verificado debe cambiar `profiles.role` **desde SQL Editor**, nunca desde registro público.
-5. **Importante:** este backend verifica tokens usando **JWKS asimétrico** (RS256/ES256). Revisar en Auth > JWT Signing Keys que el proyecto tenga una clave asimétrica activa; los proyectos que usan únicamente HS256 heredado no funcionarán con esta versión de verificación. Ver: https://supabase.com/docs/guides/auth/jwts
+1. Conservar proyecto principal, cuentas, credenciales y archivos `.env` existentes. No crear RECIWISE-TEST ni ejecutar migraciones en el compartido por seguir esta guía.
+2. **Este backend exige 001+003.** La guardia rechaza 001 sin 003, esquemas parciales/incompatibles y conexiones no verificables. Si el principal sigue con el esquema anterior, esta rama no puede servirse allí hasta una revisión y autorización posteriores. No se verificó en esta revisión qué versión está desplegada hoy.
+3. Para desarrollo, el runner existente crea un PostgreSQL local desechable con 001+003 y servicios simulados. No reutiliza datos ni credenciales reales como fixtures. La migración 002 depende de 001 y prepara rutas/paradas/incidencias; no es requisito de Sprint 1 y no se aplica ahora al compartido.
+4. Auth conserva JWKS RS256/ES256 y perfiles administrados. No existe selección pública de roles privilegiados. Los 69 casos negativos/de permisos usan tokens y claves ficticias; los flujos manuales previos con Supabase están documentados por separado.
+5. Storage real bajo fallos queda pendiente con un destino y permiso específicos. No trasladar pruebas destructivas al principal por no disponer de otro proyecto. [Lista de casos y condiciones](docs/PLAN_D2_HACKATON.md#5-pendientes-de-supabase-real-sin-bloquear-funciones-independientes).
 
-## 2. Iniciar el backend
+## 2. Verificar y preparar el backend
 
 ```bash
 cd RECIWISE
@@ -54,20 +61,23 @@ python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # Windows PowerShell: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-cp .env.example .env       # en Windows: copy .env.example .env
 ```
 
-Rellenar `.env`. `DATABASE_URL` debe ser la conexión PostgreSQL **de servidor**. Si se usa pooler transaccional con psycopg, revisar la cadena de conexión según el panel de Supabase; no compartir la contraseña.
+Los pasos de instalación son para una máquina nueva; reutilizar el entorno existente si ya está listo. Conservar `.env`; las credenciales y la conexión PostgreSQL son exclusivas del servidor. Para la regresión actual en Windows, con Docker Desktop disponible, ejecutar desde la raíz:
+
+```powershell
+.venv\Scripts\python.exe tests/run_isolated_postgres.py --phase all
+```
+
+El runner configura su propia base/servicios, registra evidencia en `.test-artifacts/` y retira el contenedor. No prepara un servidor persistente de demo para React. En Linux/macOS, usar el intérprete del entorno correspondiente para el mismo script.
+
+**Solo con un entorno compatible 003 ya preparado y revisado**, iniciar la API con su configuración segura:
 
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Abrir `http://127.0.0.1:8000/docs` para probar los endpoints. Para ejecutar los tests (no requieren Supabase):
-
-```bash
-pytest -q
-```
+Consultar `/ready` para preparación y `/docs` para contratos; `/health` solo mide el proceso. No iniciar esta rama con la configuración del principal anterior ni desactivar la guardia para conseguir un 200. Para el flujo integrado de demo y lo que falta, consultar [la guía actualizada de Sprint 1](docs/SPRINT1_PASO_A_PASO.md).
 
 ## 3. Autenticación desde React
 
@@ -116,6 +126,8 @@ El listado municipal permite filtrar por `status` y por caja geográfica `north/
 
 ## 5. Cómo probar el flujo conjunto
 
+Guion de aceptación para un entorno compatible previamente identificado. No se ejecutó contra el principal en esta revisión; si se usan servicios simulados debe indicarse.
+
 1. Registrar un usuario ciudadano con Auth y conseguir su JWT de acceso.
 2. `POST /reports` con token ciudadano → debe responder `201` y `status: recibido`.
 3. `GET /reports/mine` → debe devolver el reporte anterior.
@@ -126,10 +138,10 @@ El listado municipal permite filtrar por `status` y por caja geográfica `north/
 
 ## 6. Límites y controles antes de producción
 
-- **No hay datos reales ni un despliegue validado.** Pruebas SQLite verifican lógica de API; todavía hay que ejecutar integración contra un Supabase de prueba.
-- El envío de imágenes verifica tamaño y la firma básica del archivo, pero **no** decodifica ni analiza completamente imágenes. Para un servicio público harían falta controles adicionales de seguridad, moderación, privacidad, límites de petición y limpieza de archivos huérfanos si falla la BD tras subir al bucket.
-- El límite de tres fotos se comprueba en aplicación y podría sufrir carreras bajo carga; endurecerlo si se ofrece servicio público.
-- El conflicto de turnos se comprueba antes del `INSERT`; no es a prueba de simultaneidad. En despliegue real establecer una restricción de solapamiento en PostgreSQL.
+- **La versión nueva no tiene despliegue validado.** Se distingue evidencia manual histórica, SQLite para lógica de API/permisos y PostgreSQL real aislado para restricciones/carreras/recuperación. Las pruebas pendientes con Storage real no se consideran aprobadas por las simulaciones.
+- El envío de imágenes verifica tamaño y firma básica, sin decodificación completa. La compensación durable y el conciliador ya están implementados y probados localmente; privacidad/moderación/retención, fallos del servicio real y operación del alojamiento requieren revisión adicional.
+- Con 003, slots únicos 1–3 y bloqueo de reporte garantizan el máximo de fotos incluso con concurrencia. Las peticiones a Storage y PostgreSQL no son atómicas: la consistencia es eventual, hay cuarentenas y pueden repetirse DELETE idempotentes tras una caída.
+- Con 003, exclusiones PostgreSQL de vehículo y chofer impiden reservas superpuestas y permiten intervalos contiguos. Mantienen HTTP 409; la consulta previa sigue siendo una validación temprana. **003 no se ha aplicado al compartido por esta tarea.**
 - Las cadenas `status` representan fases, no dan por atendido un reporte al agruparlo. En el Sprint 2 se documentarán las transiciones y auditoría.
 - No se infiere volumen/carga desde la descripción ni se calculan ahorros, optimización o capacidades sin datos.
 - Revisar políticas de privacidad, retención de fotos, uso de coordenadas, protección contra abuso, y permisos/estado operativo municipal antes del despliegue.
@@ -137,9 +149,9 @@ El listado municipal permite filtrar por `status` y por caja geográfica `north/
 
 ## 7. Próximos pasos compartidos
 
-**D1:** integrar Supabase Auth en React, adjuntar el JWT a FastAPI, formulario y `Mis reportes`, mapa municipal con filtros.
+**D1:** reutilizar Auth/JWT, GPS/mapa, fotos, `Mis reportes` y consulta municipal existentes. Ensayar la misma versión junto con D2 y verificar móvil/HTTPS; no rehacer pantallas que ya funcionan.
 
-**D2:** configurar un proyecto Supabase de prueba, ejecutar migración 001, crear cuentas piloto, ejecutar tests de integración, confirmar contratos y documentar las modificaciones de esquema.
+**D2:** aceptar el recorrido funcional en un entorno compatible, mantener regresión aislada y preparar contrato/adaptador/revisión municipal de Sprint 2. No crear otro Supabase ni migrar el principal ahora. Ver [orden y criterios hasta el 19/11](docs/PLAN_D2_HACKATON.md).
 
 **D3:** acordar con D2 el contrato en `docs/CONTRATOS_D3.md`, preparar ejemplos etiquetados separados por evento e integrar un módulo de comparación **sin** cambiar aún el estado de los reportes. Después se conectarán propuestas de agrupación y OR-Tools.
 

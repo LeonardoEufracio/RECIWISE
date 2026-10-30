@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, JSON, SmallInteger, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import Uuid
 from .db import Base
@@ -28,12 +28,38 @@ class Report(Base):
 
 class ReportPhoto(Base):
     __tablename__ = "report_photos"
+    __table_args__ = (
+        CheckConstraint("slot BETWEEN 1 AND 3", name="report_photos_slot_valid"),
+        UniqueConstraint("report_id", "slot", name="report_photos_report_slot_key"),
+    )
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     report_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("reports.id"), nullable=False)
+    slot: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     storage_path: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     content_type: Mapped[str] = mapped_column(String(30), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PhotoUploadOperation(Base):
+    __tablename__ = "photo_upload_operations"
+    __table_args__ = (
+        CheckConstraint("state IN ('pending','complete','cleanup_pending','quarantined','cleaned','rejected','review')"),
+        CheckConstraint("attempts >= 0"),
+        CheckConstraint("extension IN ('jpg','png','webp')"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
+    actor_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("profiles.id"), nullable=False)
+    report_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("reports.id"), nullable=False)
+    bucket: Mapped[str] = mapped_column(Text, nullable=False)
+    storage_path: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    extension: Mapped[str] = mapped_column(String(4), nullable=False)
+    state: Mapped[str] = mapped_column(String(30), nullable=False, default="pending", server_default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    last_error: Mapped[str | None] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Vehicle(Base):

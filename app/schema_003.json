@@ -1,0 +1,1905 @@
+{
+  "schema": "003",
+  "source": "fresh isolated PostgreSQL; unchanged migrations 001 + 003",
+  "migration_sha256": {
+    "001_sprint1.sql": "937d679a6116c658ee245d47ad7bf3c1867bb81d8b8b9faeb3dda12e55575f06",
+    "003_sprint1_concurrencia.sql": "320ff74540cfbb4e49c680ba17036184fd4b0fc585c76f26a4314d838799906c"
+  },
+  "catalog": {
+    "tables": [
+      {
+        "table_name": "photo_upload_operations",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "profiles",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "report_photos",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "reports",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "service_sites",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "shifts",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "vehicles",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      }
+    ],
+    "columns": [
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "actor_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "report_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "bucket",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "storage_path",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "extension",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "state",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'pending'::text"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "attempts",
+        "type": "integer",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "0"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "last_error",
+        "type": "character varying(80)",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "updated_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "column_name": "next_attempt_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "profiles",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "profiles",
+        "column_name": "role",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'ciudadano'::text"
+      },
+      {
+        "table_name": "profiles",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "report_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "storage_path",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "content_type",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "size_bytes",
+        "type": "integer",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "report_photos",
+        "column_name": "slot",
+        "type": "smallint",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "reports",
+        "column_name": "citizen_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "description",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "latitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "longitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "observed_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "reports",
+        "column_name": "waste_type",
+        "type": "character varying(80)",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "reports",
+        "column_name": "status",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'recibido'::text"
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "name",
+        "type": "character varying(120)",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "site_type",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "latitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "longitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "service_sites",
+        "column_name": "active",
+        "type": "boolean",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "true"
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "vehicle_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "driver_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "departure_site_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "disposal_site_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "starts_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "ends_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "status",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'programado'::text"
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "created_by",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "shifts",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "label",
+        "type": "character varying(100)",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "vehicle_type",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "plate",
+        "type": "character varying(20)",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "available",
+        "type": "boolean",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "false"
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "capacity_kg",
+        "type": "double precision",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "vehicles",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      }
+    ],
+    "constraints": [
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_operation_owned_path",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((storage_path = ((((((('reports/'::text || (actor_id)::text) || '/'::text) || (report_id)::text) || '/'::text) || (id)::text) || '.'::text) || extension)))"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_actor_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (actor_id) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_attempts_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((attempts >= 0))"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_bucket_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((char_length(bucket) >= 1) AND (char_length(bucket) <= 100)))"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_extension_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((extension = ANY (ARRAY['jpg'::text, 'png'::text, 'webp'::text])))"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_report_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (report_id) REFERENCES reports(id)"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_state_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((state = ANY (ARRAY['pending'::text, 'complete'::text, 'cleanup_pending'::text, 'quarantined'::text, 'cleaned'::text, 'rejected'::text, 'review'::text])))"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_storage_path_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (storage_path)"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_role_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((role = ANY (ARRAY['ciudadano'::text, 'encargado_municipal'::text, 'chofer'::text])))"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_content_type_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((content_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text])))"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_slot_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (report_id, slot)"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_size_bytes_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((size_bytes >= 1) AND (size_bytes <= 5242880)))"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_slot_valid",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((slot >= 1) AND (slot <= 3)))"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_storage_path_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (storage_path)"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_citizen_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (citizen_id) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_description_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((char_length(btrim(description)) >= 3) AND (char_length(btrim(description)) <= 2000)))"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_latitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((latitude >= ('-90'::integer)::double precision) AND (latitude <= (90)::double precision)))"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_longitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((longitude >= ('-180'::integer)::double precision) AND (longitude <= (180)::double precision)))"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_status_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((status = ANY (ARRAY['recibido'::text, 'en_revision'::text, 'programado'::text, 'atendido'::text, 'descartado'::text])))"
+      },
+      {
+        "table_name": "service_sites",
+        "conname": "service_sites_latitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((latitude >= ('-90'::integer)::double precision) AND (latitude <= (90)::double precision)))"
+      },
+      {
+        "table_name": "service_sites",
+        "conname": "service_sites_longitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((longitude >= ('-180'::integer)::double precision) AND (longitude <= (180)::double precision)))"
+      },
+      {
+        "table_name": "service_sites",
+        "conname": "service_sites_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "service_sites",
+        "conname": "service_sites_site_type_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((site_type = ANY (ARRAY['salida'::text, 'descarga'::text, 'ambos'::text])))"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_created_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_departure_site_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (departure_site_id) REFERENCES service_sites(id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_disposal_site_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (disposal_site_id) REFERENCES service_sites(id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (driver_id) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_no_overlap",
+        "contype": "x",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "EXCLUDE USING gist (driver_id WITH =, tstzrange(starts_at, ends_at, '[)'::text) WITH &&) WHERE ((status = 'programado'::text))"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_status_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((status = ANY (ARRAY['programado'::text, 'cancelado'::text, 'finalizado'::text])))"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_valid_interval",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((ends_at > starts_at))"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_no_overlap",
+        "contype": "x",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "EXCLUDE USING gist (vehicle_id WITH =, tstzrange(starts_at, ends_at, '[)'::text) WITH &&) WHERE ((status = 'programado'::text))"
+      },
+      {
+        "table_name": "vehicles",
+        "conname": "vehicles_capacity_kg_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((capacity_kg > (0)::double precision))"
+      },
+      {
+        "table_name": "vehicles",
+        "conname": "vehicles_label_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (label)"
+      },
+      {
+        "table_name": "vehicles",
+        "conname": "vehicles_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "vehicles",
+        "conname": "vehicles_vehicle_type_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((vehicle_type = ANY (ARRAY['compactadora'::text, 'volquete'::text, 'camion_baranda'::text, 'otro'::text])))"
+      }
+    ],
+    "foreign_key_triggers": [
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_actor_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_actor_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_actor_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_actor_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "conname": "photo_upload_operations_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_cascade_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "profiles",
+        "conname": "profiles_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_cascade_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "report_photos",
+        "conname": "report_photos_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_citizen_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_citizen_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_citizen_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "reports",
+        "conname": "reports_citizen_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_departure_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_departure_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_departure_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_departure_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_disposal_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_disposal_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_disposal_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_disposal_site_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_driver_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "shifts",
+        "conname": "shifts_vehicle_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      }
+    ],
+    "indexes": [
+      {
+        "table_name": "photo_upload_operations",
+        "index_name": "photo_operations_due_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "next_attempt_at",
+          "id"
+        ],
+        "predicate": "(state = ANY (ARRAY['pending'::text, 'cleanup_pending'::text, 'quarantined'::text]))",
+        "operator_classes": [
+          "pg_catalog.timestamptz_ops",
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "index_name": "photo_upload_operations_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "index_name": "photo_upload_operations_storage_path_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "storage_path"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.text_ops"
+        ]
+      },
+      {
+        "table_name": "profiles",
+        "index_name": "profiles_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "report_photos",
+        "index_name": "report_photos_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "report_photos",
+        "index_name": "report_photos_report_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "report_id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "report_photos",
+        "index_name": "report_photos_report_slot_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "report_id",
+          "slot"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.int2_ops"
+        ]
+      },
+      {
+        "table_name": "report_photos",
+        "index_name": "report_photos_storage_path_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "storage_path"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.text_ops"
+        ]
+      },
+      {
+        "table_name": "reports",
+        "index_name": "reports_citizen_created_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "citizen_id",
+          "created_at"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.timestamptz_ops"
+        ]
+      },
+      {
+        "table_name": "reports",
+        "index_name": "reports_location_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "latitude",
+          "longitude"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.float8_ops",
+          "pg_catalog.float8_ops"
+        ]
+      },
+      {
+        "table_name": "reports",
+        "index_name": "reports_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "reports",
+        "index_name": "reports_status_created_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "status",
+          "created_at"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.text_ops",
+          "pg_catalog.timestamptz_ops"
+        ]
+      },
+      {
+        "table_name": "service_sites",
+        "index_name": "service_sites_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "shifts",
+        "index_name": "shifts_driver_no_overlap",
+        "amname": "gist",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": true,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "driver_id",
+          "tstzrange(starts_at, ends_at, '[)'::text)"
+        ],
+        "predicate": "(status = 'programado'::text)",
+        "operator_classes": [
+          "btree_gist.gist_uuid_ops",
+          "pg_catalog.range_ops"
+        ]
+      },
+      {
+        "table_name": "shifts",
+        "index_name": "shifts_driver_time_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 3,
+        "indnatts": 3,
+        "keys": [
+          "driver_id",
+          "starts_at",
+          "ends_at"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.timestamptz_ops",
+          "pg_catalog.timestamptz_ops"
+        ]
+      },
+      {
+        "table_name": "shifts",
+        "index_name": "shifts_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "shifts",
+        "index_name": "shifts_vehicle_no_overlap",
+        "amname": "gist",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": true,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "vehicle_id",
+          "tstzrange(starts_at, ends_at, '[)'::text)"
+        ],
+        "predicate": "(status = 'programado'::text)",
+        "operator_classes": [
+          "btree_gist.gist_uuid_ops",
+          "pg_catalog.range_ops"
+        ]
+      },
+      {
+        "table_name": "shifts",
+        "index_name": "shifts_vehicle_time_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 3,
+        "indnatts": 3,
+        "keys": [
+          "vehicle_id",
+          "starts_at",
+          "ends_at"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.timestamptz_ops",
+          "pg_catalog.timestamptz_ops"
+        ]
+      },
+      {
+        "table_name": "vehicles",
+        "index_name": "vehicles_label_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "label"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.text_ops"
+        ]
+      },
+      {
+        "table_name": "vehicles",
+        "index_name": "vehicles_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      }
+    ],
+    "client_access": [
+      {
+        "table_name": "photo_upload_operations",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "photo_upload_operations",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "profiles",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "profiles",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "report_photos",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "report_photos",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "reports",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "reports",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "service_sites",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "service_sites",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "shifts",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "shifts",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "vehicles",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "vehicles",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      }
+    ],
+    "policies": [],
+    "triggers": [],
+    "rules": []
+  }
+}
