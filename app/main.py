@@ -1,18 +1,77 @@
+import logging
 import uuid
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy import or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
 from .config import get_settings
-from .db import get_db
+from .db import get_db, get_engine
+from .db_errors import SHIFT_EXCLUSIONS, diagnostics
 from .models import Profile, Report, ReportPhoto, ServiceSite, Shift, Vehicle
+from .photo_uploads import PhotoUploads
 from .schemas import (ActorOut, AvailabilityPatch, PhotoOut, ReportCreate, ReportOut,
                       ShiftCreate, ShiftOut, SiteCreate, SiteOut, VehicleCreate, VehicleOut)
 from .security import Actor, get_current_actor, require_roles
-from .storage import put_private_image, signed_image_url
+from .schema_guard import REQUIRED_SCHEMA, SchemaCheckError, verify_schema
+from .storage import put_private_image, remove_private_image, signed_image_url
+from .events import router as events_router
+from .groupings import router as groupings_router
+from .route_proposals import router as route_proposals_router
+from .municipal_resources import router as resources_router
+from .route_execution import router as execution_router
 
-app = FastAPI(title="RECIWISE API", version="0.1.0", description="Sprint 1: reportes y recursos básicos")
+logger = logging.getLogger(__name__)
+
+
+def check_configured_schema():
+    try:
+        verify_schema(get_engine())
+    except SchemaCheckError:
+        raise
+    except Exception:
+        raise SchemaCheckError("database_unavailable") from None
+
+
+@asynccontextmanager
+async def lifespan(application):
+    application.state.schema_guard_started = False
+    application.state.schema_compatible = False
+    try:
+        await run_in_threadpool(check_configured_schema)
+    except SchemaCheckError as exc:
+        logger.error("RECIWISE startup refused: %s", exc.code)
+        raise exc from None
+    application.state.schema_guard_started = True
+    application.state.schema_compatible = True
+    try:
+        yield
+    finally:
+        application.state.schema_guard_started = False
+        application.state.schema_compatible = False
+
+
+app = FastAPI(title="RECIWISE API", version="0.1.0", description="Sprint 1: reportes y recursos básicos", lifespan=lifespan)
+app.state.schema_guard_started = False
+app.state.schema_compatible = False
+app.include_router(events_router)
+app.include_router(groupings_router)
+app.include_router(route_proposals_router)
+app.include_router(resources_router)
+app.include_router(execution_router)
+@app.middleware("http")
+async def require_prepared_service(request, call_next):
+    diagnostics = {"/health", "/ready", "/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json"}
+    if request.url.path not in diagnostics and not (
+        app.state.schema_guard_started and app.state.schema_compatible
+    ):
+        return JSONResponse({"detail": "Servicio no preparado; comprueba compatibilidad del esquema"}, status_code=503)
+    return await call_next(request)
+
+
 app.add_middleware(CORSMiddleware, allow_origins=get_settings().origins,
                    allow_credentials=False, allow_methods=["GET", "POST", "PATCH"],
                    allow_headers=["Authorization", "Content-Type"])
@@ -21,6 +80,21 @@ app.add_middleware(CORSMiddleware, allow_origins=get_settings().origins,
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/ready", include_in_schema=False)
+def ready():
+    # A probe cannot replace startup or enable a process run with lifespan disabled.
+    if not app.state.schema_guard_started:
+        return JSONResponse({"status": "not_ready", "schema": "unverified"}, status_code=503)
+    try:
+        check_configured_schema()
+    except SchemaCheckError as exc:
+        app.state.schema_compatible = False
+        logger.warning("RECIWISE readiness refused: %s", exc.code)
+        return JSONResponse({"status": "not_ready", "schema": "unverified"}, status_code=503)
+    app.state.schema_compatible = True
+    return {"status": "ready", "schema": REQUIRED_SCHEMA}
 
 
 @app.get("/me", response_model=ActorOut)
@@ -63,13 +137,13 @@ def report_detail(report_id: uuid.UUID, db: Session = Depends(get_db),
 
 
 @app.post("/reports/{report_id}/photos", response_model=PhotoOut, status_code=201)
-async def upload_photo(report_id: uuid.UUID, file: UploadFile = File(...),
+def upload_photo(report_id: uuid.UUID, file: UploadFile = File(...),
                        db: Session = Depends(get_db), actor: Actor = Depends(require_roles("ciudadano"))):
     report = allowed_report(report_id, db, actor)
     if report.citizen_id != actor.id:
         raise HTTPException(status_code=403, detail="Solo el autor puede subir imágenes")
     size_limit = 5 * 1024 * 1024
-    contents = await file.read(size_limit + 1)
+    contents = file.file.read(size_limit + 1)
     if len(contents) > size_limit:
         raise HTTPException(status_code=413, detail="La imagen supera 5 MB")
     kind = None
@@ -81,29 +155,20 @@ async def upload_photo(report_id: uuid.UUID, file: UploadFile = File(...),
         kind = ("image/webp", "webp")
     if kind is None:
         raise HTTPException(status_code=415, detail="Formato inválido: JPG, PNG o WebP")
-    num_photos = db.query(ReportPhoto).filter(ReportPhoto.report_id == report_id).count()
-    if num_photos >= 3:
-        raise HTTPException(status_code=409, detail="Máximo 3 imágenes por reporte")
-    photo_id = uuid.uuid4()
-    path = f"reports/{actor.id}/{report_id}/{photo_id}.{kind[1]}"
-    await put_private_image(path, contents, kind[0])
-    photo = ReportPhoto(id=photo_id, report_id=report_id,
-                        storage_path=path, content_type=kind[0], size_bytes=len(contents))
-    db.add(photo)
-    db.commit()
-    db.refresh(photo)
-    return photo
+    service = PhotoUploads(lambda: Session(db.get_bind(), expire_on_commit=False),
+                           get_settings().storage_bucket, put_private_image, remove_private_image)
+    return service.create(actor, report_id, contents, kind)
 
 
 @app.get("/reports/{report_id}/photos", response_model=list[PhotoOut])
-async def list_photos(report_id: uuid.UUID, db: Session = Depends(get_db),
+def list_photos(report_id: uuid.UUID, db: Session = Depends(get_db),
                       actor: Actor = Depends(get_current_actor)):
     allowed_report(report_id, db, actor)
     photos = db.scalars(select(ReportPhoto).where(ReportPhoto.report_id == report_id)).all()
     output = []
     for photo in photos:
         item = PhotoOut.model_validate(photo)
-        item.signed_url = await signed_image_url(photo.storage_path)
+        item.signed_url = signed_image_url(photo.storage_path)
         output.append(item)
     return output
 
@@ -152,7 +217,7 @@ def create_vehicle(payload: VehicleCreate, db: Session = Depends(get_db),
 def update_vehicle(vehicle_id: uuid.UUID, payload: AvailabilityPatch,
                    db: Session = Depends(get_db),
                    actor: Actor = Depends(require_roles("encargado_municipal"))):
-    vehicle = db.get(Vehicle, vehicle_id)
+    vehicle = db.scalar(select(Vehicle).where(Vehicle.id == vehicle_id).with_for_update())
     if vehicle is None:
         raise HTTPException(status_code=404, detail="Vehículo no encontrado")
     vehicle.available = payload.available
@@ -184,28 +249,47 @@ def shifts(db: Session = Depends(get_db), actor: Actor = Depends(require_roles("
 @app.post("/municipal/shifts", response_model=ShiftOut, status_code=201)
 def create_shift(payload: ShiftCreate, db: Session = Depends(get_db),
                  actor: Actor = Depends(require_roles("encargado_municipal"))):
-    vehicle = db.get(Vehicle, payload.vehicle_id)
-    driver = db.get(Profile, payload.driver_id)
-    departure = db.get(ServiceSite, payload.departure_site_id)
-    disposal = db.get(ServiceSite, payload.disposal_site_id)
-    if vehicle is None or not vehicle.available:
-        raise HTTPException(status_code=422, detail="El vehículo no existe o no está disponible")
-    if driver is None or driver.role != "chofer":
-        raise HTTPException(status_code=422, detail="Chofer no válido")
-    if departure is None or not departure.active or departure.site_type not in ("salida", "ambos"):
-        raise HTTPException(status_code=422, detail="Punto de salida no válido")
-    if disposal is None or not disposal.active or disposal.site_type not in ("descarga", "ambos"):
-        raise HTTPException(status_code=422, detail="Punto de descarga no válido")
-    overlap = db.scalar(select(Shift.id).where(
-        Shift.status == "programado",
-        Shift.starts_at < payload.ends_at,
-        Shift.ends_at > payload.starts_at,
-        or_(Shift.vehicle_id == payload.vehicle_id, Shift.driver_id == payload.driver_id),
-    ).limit(1))
-    if overlap:
-        raise HTTPException(status_code=409, detail="Vehículo o chofer ya reservado en ese horario")
-    shift = Shift(**payload.model_dump(), created_by=actor.id)
-    db.add(shift)
-    db.commit()
-    db.refresh(shift)
-    return shift
+    # Resource SHARE locks permit competing reservations, but serialize resource
+    # changes. Exclusions, not these reads, decide overlapping reservations.
+    # Every known-aborted retry must reacquire locks and revalidate availability.
+    for attempt in range(3):
+        try:
+            vehicle = db.scalar(select(Vehicle).where(Vehicle.id == payload.vehicle_id).with_for_update(read=True))
+            driver = db.scalar(select(Profile).where(Profile.id == payload.driver_id).with_for_update(read=True))
+            locked_sites = {s.id: s for s in db.scalars(select(ServiceSite)
+                .where(ServiceSite.id.in_({payload.departure_site_id, payload.disposal_site_id}))
+                .order_by(ServiceSite.id).with_for_update(read=True))}
+            departure = locked_sites.get(payload.departure_site_id)
+            disposal = locked_sites.get(payload.disposal_site_id)
+            if vehicle is None or not vehicle.available:
+                raise HTTPException(status_code=422, detail="El vehículo no existe o no está disponible")
+            if driver is None or driver.role != "chofer":
+                raise HTTPException(status_code=422, detail="Chofer no válido")
+            if departure is None or not departure.active or departure.site_type not in ("salida", "ambos"):
+                raise HTTPException(status_code=422, detail="Punto de salida no válido")
+            if disposal is None or not disposal.active or disposal.site_type not in ("descarga", "ambos"):
+                raise HTTPException(status_code=422, detail="Punto de descarga no válido")
+            overlap = db.scalar(select(Shift.id).where(
+                Shift.status == "programado",
+                Shift.starts_at < payload.ends_at,
+                Shift.ends_at > payload.starts_at,
+                or_(Shift.vehicle_id == payload.vehicle_id, Shift.driver_id == payload.driver_id),
+            ).limit(1))
+            if overlap:
+                raise HTTPException(status_code=409, detail="Vehículo o chofer ya reservado en ese horario")
+            shift = Shift(**payload.model_dump(), created_by=actor.id)
+            db.add(shift)
+            db.flush()
+            result = ShiftOut.model_validate(shift)
+            db.commit()
+            return result
+        except DBAPIError as exc:
+            db.rollback()
+            state, constraint = diagnostics(exc)
+            if state == "23P01" and constraint in SHIFT_EXCLUSIONS:
+                raise HTTPException(status_code=409, detail="Vehículo o chofer ya reservado en ese horario") from None
+            if state in {"40001", "40P01"} and attempt < 2:
+                continue
+            if not isinstance(exc, IntegrityError) or state in {"40001", "40P01", "55P03", "57014"}:
+                raise HTTPException(status_code=503, detail="No se pudo confirmar el turno; consulta los turnos antes de reintentar") from None
+            raise

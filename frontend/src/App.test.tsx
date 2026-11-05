@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import App from './App'
 import type { Coordinates, Report } from './types'
@@ -39,6 +39,35 @@ function authMock(initial: Session | null) {
 function json(value: unknown, status = 200) { return new Response(JSON.stringify(value), { status }) }
 
 describe('Flujos de la interfaz con Auth y API simulados', () => {
+  it.each(['ciudadano', 'chofer'])('no habilita navegación ni demostración municipal para %s aunque se active el flag', async (role) => {
+    const { client } = authMock(session)
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => String(url).endsWith('/me') ? json({ id: 'test-user', role }) : json([]))
+    vi.stubGlobal('fetch', fetcher)
+    render(<App supabase={client} config={config} demoAvailable />)
+    await screen.findByText(role, { selector: 'strong' })
+    expect(screen.queryByRole('navigation', { name: 'Navegación municipal' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Explorar demostración' })).toBeNull()
+    expect(fetcher.mock.calls.some(([url]) => String(url).includes('/municipal/'))).toBe(false)
+  })
+  it('retira el espacio municipal cuando FastAPI devuelve 401 y permite volver a iniciar sesión', async () => {
+    const { client } = authMock(session)
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async (url) => String(url).endsWith('/me')
+      ? json({ id: 'manager', role: 'encargado_municipal' }) : json({ detail: 'Token vencido' }, 401)))
+    render(<App supabase={client} config={config} />)
+    await screen.findByRole('button', { name: 'Entrar' })
+    expect(screen.queryByRole('navigation', { name: 'Navegación municipal' })).toBeNull()
+    expect(screen.getByText(/La sesión no fue aceptada/)).toBeTruthy()
+    expect(screen.getByText('401')).toBeTruthy()
+  })
+  it('por defecto no ofrece demostración al encargado y conserva un resumen real', async () => {
+    const { client } = authMock(session)
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async (url) => String(url).endsWith('/me')
+      ? json({ id: 'manager', role: 'encargado_municipal' }) : json([report])))
+    render(<App supabase={client} config={config} />)
+    await screen.findByText(report.description)
+    expect(screen.getByRole('button', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.queryByRole('button', { name: 'Explorar demostración' })).toBeNull()
+  })
   it('inicia sesión con una cuenta existente y usa el rol de /me, ignorando user_metadata', async () => {
     const getCurrentPosition = vi.fn()
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } })
@@ -99,6 +128,74 @@ describe('Flujos de la interfaz con Auth y API simulados', () => {
     expect(screen.queryByText(session.access_token)).toBeNull()
   })
 
+  it('dos reportes consecutivos conservan fotos distintas y el reintento no cambia su destino', async () => {
+    const { client } = authMock(session)
+    const reports: Report[] = []
+    const photos = new Map<string, { id: string; report_id: string; signed_url: string }[]>()
+    const posts: { reportId: string; name: string }[] = []
+    let failed = false
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(async (url, init) => {
+      const path = new URL(String(url)).pathname
+      if (path === '/me') return json({ id: 'citizen-1', role: 'ciudadano' })
+      if (path === '/reports' && init?.method === 'POST') {
+        const value = { ...report, ...JSON.parse(String(init.body)), id: 'consecutive-' + (reports.length + 1) }
+        reports.push(value); photos.set(value.id, [])
+        return json(value, 201)
+      }
+      if (path === '/reports/mine') return json([...reports].reverse())
+      const match = path.match(/^\/reports\/([^/]+)\/photos$/)
+      if (!match || !photos.has(match[1])) throw new Error('Unexpected test path')
+      const id = match[1]
+      if (init?.method === 'POST') {
+        const file = (init.body as FormData).get('file') as File
+        posts.push({ reportId: id, name: file.name })
+        if (id === 'consecutive-2' && !failed) { failed = true; return json({ detail: 'Fallo ficticio de Storage' }, 502) }
+        const result = { id: 'photo-' + id, report_id: id, signed_url: 'https://storage.invalid/' + file.name }
+        photos.get(id)!.push(result)
+        return json(result, 201)
+      }
+      return json(photos.get(id))
+    }))
+    render(<App supabase={client} config={config} />)
+    async function create(number: number) {
+      fireEvent.change(await screen.findByLabelText('Descripción'), { target: { value: 'Reporte consecutivo ' + number } })
+      fireEvent.click(screen.getByRole('button', { name: 'Elegir en el mapa' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Seleccionar punto de prueba' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Confirmar ubicación' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Registrar reporte' }))
+      const id = 'consecutive-' + number
+      const card = (await screen.findByText('ID: ' + id)).closest('article')!
+      await within(card).findByText('Este reporte no tiene fotografías.')
+      expect(within(card).getByText(id, { selector: 'span' })).toBeTruthy()
+      return card
+    }
+    async function upload(card: HTMLElement, name: string) {
+      const input = within(card).getByLabelText(/Fotografía \(JPG/)
+      await waitFor(() => expect((input as HTMLInputElement).disabled).toBe(false))
+      fireEvent.change(input, { target: { files: [new File([name], name, { type: 'image/png' })] } })
+      fireEvent.submit(input.closest('form')!)
+    }
+    const first = await create(1)
+    await upload(first, 'primera.png')
+    expect((await within(first).findByAltText('Fotografía 1 del reporte')).getAttribute('src')).toContain('/primera.png')
+    const second = await create(2)
+    await upload(second, 'segunda.png')
+    await within(second).findByText('Fallo ficticio de Storage')
+    expect(photos.get('consecutive-1')).toHaveLength(1)
+    expect(photos.get('consecutive-2')).toHaveLength(0)
+    expect(posts).toHaveLength(2) // Never automatically repeat a failed write.
+    fireEvent.click(within(second).getByRole('button', { name: 'Renovar enlaces' }))
+    await within(second).findByText('Fotografías (0/3)')
+    await upload(second, 'segunda.png')
+    expect((await within(second).findByAltText('Fotografía 1 del reporte')).getAttribute('src')).toContain('/segunda.png')
+    expect(posts).toEqual([{ reportId: 'consecutive-1', name: 'primera.png' },
+      { reportId: 'consecutive-2', name: 'segunda.png' }, { reportId: 'consecutive-2', name: 'segunda.png' }])
+    expect(reports).toHaveLength(2)
+    const firstAgain = screen.getByText('ID: consecutive-1').closest('article')!
+    fireEvent.click(within(firstAgain).getByRole('button', { name: 'Ver fotografías' }))
+    expect((await within(firstAgain).findByAltText('Fotografía 1 del reporte')).getAttribute('src')).toContain('/primera.png')
+  })
+
   it('consulta la ruta municipal y permite leer fotos sin ofrecer subidas ni registros', async () => {
     const { client } = authMock(session)
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async (url) => {
@@ -109,6 +206,8 @@ describe('Flujos de la interfaz con Auth y API simulados', () => {
     vi.stubGlobal('fetch', fetcher)
     render(<App supabase={client} config={config} />)
     await screen.findByText(report.description)
+    fireEvent.click(screen.getByRole('button', { name: 'Reportes ciudadanos' }))
+    await screen.findByRole('heading', { name: 'Reportes municipales' })
     expect(screen.queryByRole('button', { name: 'Registrar reporte' })).toBeNull()
     expect(fetcher.mock.calls.some(([url]) => String(url).includes('/reports/mine'))).toBe(false)
     fireEvent.click(screen.getByRole('button', { name: 'Ver fotografías' }))

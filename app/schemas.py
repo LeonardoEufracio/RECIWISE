@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, JsonValue, field_validator, model_validator
 
 
 class ORMOut(BaseModel):
@@ -20,12 +20,15 @@ class ReportCreate(BaseModel):
     observed_at: datetime
     waste_type: str | None = Field(default=None, max_length=80)
 
-    @field_validator("description")
+    # Recortar antes de aplicar min_length/max_length del campo.
+    @field_validator("description", mode="before")
     @classmethod
-    def reject_blank(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("La descripción no puede estar vacía")
-        return v.strip()
+    def strip_description(cls, v: object) -> object:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                raise ValueError("La descripción no puede estar vacía")
+        return v
 
     @field_validator("observed_at")
     @classmethod
@@ -123,3 +126,48 @@ class ShiftOut(ORMOut):
     ends_at: datetime
     status: str
     created_by: uuid.UUID
+
+
+EventState = Literal["en_revision", "abierto", "programado", "atendido", "cerrado", "descartado"]
+
+
+class EventCreate(BaseModel):
+    # State, closure and priority are deliberately server-owned in this increment.
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    intervention_type: str | None = Field(default=None, min_length=1, max_length=120)
+    report_ids: list[uuid.UUID] = Field(default_factory=list, max_length=100)
+
+    @field_validator("intervention_type", mode="before")
+    @classmethod
+    def trim_intervention(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("report_ids")
+    @classmethod
+    def unique_reports(cls, value):
+        if len(value) != len(set(value)):
+            raise ValueError("Los identificadores de reportes no pueden repetirse")
+        return value
+
+
+class EventPriorityOut(BaseModel):
+    score: FiniteFloat | None
+    # Preserve stored JSON; D3 has not agreed on a list of label/value factors.
+    factors: JsonValue
+    version: str | None
+
+
+class EventOut(BaseModel):
+    id: uuid.UUID
+    latitude: float
+    longitude: float
+    state: EventState
+    intervention_type: str | None
+    priority: EventPriorityOut | None
+    restrictions: None = None  # No column or verified operational restrictions yet.
+    report_ids: list[uuid.UUID]
+    report_count: int
+    created_at: datetime
+    closed_at: datetime | None

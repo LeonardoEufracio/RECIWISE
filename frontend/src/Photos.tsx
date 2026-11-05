@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import type { Api } from './api'
 import type { Photo } from './types'
 
@@ -11,26 +11,54 @@ function PhotoImage({ photo, index }: { photo: Photo; index: number }) {
   </a>
 }
 
-export default function Photos({ api, reportId, canUpload }: { api: Api; reportId: string; canUpload: boolean }) {
+type Props = { api: Api; reportId: string; canUpload: boolean }
+
+export default function Photos(props: Props) {
+  // A selected file, pending upload and count belong to exactly one report.
+  return <ReportPhotos key={props.reportId} {...props} />
+}
+
+function ReportPhotos({ api, reportId, canUpload }: Props) {
   const [photos, setPhotos] = useState<Photo[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [version, setVersion] = useState(0)
+  const uploadLock = useRef(false)
+  const mounted = useRef(false)
+  const readVersion = useRef(0)
+  const reading = useRef<AbortController | null>(null)
   const path = `/reports/${reportId}/photos`
 
   const load = useCallback(async () => {
+    if (!mounted.current) return
+    const request = ++readVersion.current
+    reading.current?.abort()
+    const controller = new AbortController()
+    reading.current = controller
+    const current = () => mounted.current && request === readVersion.current && !controller.signal.aborted
     setLoading(true)
     setError('')
-    try { setPhotos(await api<Photo[]>(path)); setVersion((value) => value + 1) }
-    catch (err) { setError((err as Error).message) }
-    finally { setLoading(false) }
+    // Unknown/loading is distinct from a successful GET returning []. In
+    // particular, POST 201 + failed signing/GET must never retain a stale zero.
+    setPhotos(null)
+    try {
+      const photos = await api<Photo[]>(path, { signal: controller.signal })
+      if (current()) { setPhotos(photos); setVersion((value) => value + 1) }
+    }
+    catch (err) { if (current()) setError((err as Error).message) }
+    finally { if (current()) setLoading(false) }
   }, [api, path])
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    mounted.current = true
+    void load()
+    return () => { mounted.current = false; readVersion.current += 1; reading.current?.abort() }
+  }, [load])
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (uploadLock.current) return
     const form = event.currentTarget
     const file = (form.elements.namedItem('file') as HTMLInputElement).files?.[0]
     setError(''); setMessage('')
@@ -40,14 +68,16 @@ export default function Photos({ api, reportId, canUpload }: { api: Api; reportI
     if ((photos?.length ?? 0) >= 3) { setError('El reporte ya tiene el máximo de 3 fotografías.'); return }
     const body = new FormData()
     body.append('file', file)
+    uploadLock.current = true
     setUploading(true)
     try {
       await api<Photo>(path, { method: 'POST', body })
+      if (!mounted.current) return
       form.reset()
       setMessage('Fotografía guardada.')
       await load()
-    } catch (err) { setError((err as Error).message) }
-    finally { setUploading(false) }
+    } catch (err) { if (mounted.current) setError((err as Error).message) }
+    finally { uploadLock.current = false; if (mounted.current) setUploading(false) }
   }
 
   return <section className="photos" aria-label="Fotografías del reporte">
@@ -55,6 +85,7 @@ export default function Photos({ api, reportId, canUpload }: { api: Api; reportI
       <strong>Fotografías {photos ? `(${photos.length}/3)` : ''}</strong>
       <button type="button" onClick={() => void load()} disabled={loading || uploading}>Renovar enlaces</button>
     </div>
+    <p className="hint">Reporte de estas fotografías: <span className="identifier">{reportId}</span></p>
     <p className="hint">Los enlaces de lectura vencen a los 5 minutos.</p>
     {loading && <p role="status">Cargando fotografías…</p>}
     {error && <p className="error" role="alert">{error}</p>}

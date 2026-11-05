@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { createApi, type Api } from './api'
 import type { PublicConfig } from './config'
 import type { Actor, Report, RequestEntry } from './types'
 import ReportForm from './ReportForm'
 import Reports from './Reports'
+import MunicipalWorkspace from './municipal/MunicipalWorkspace'
+import { Icon } from './municipal/ui'
+import DriverWorkspace from './operations/DriverWorkspace'
 
 function Login({ supabase }: { supabase: SupabaseClient }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const lock = useRef(false)
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (lock.current) return
+    lock.current = true
     const form = event.currentTarget
     const fields = new FormData(form)
     setBusy(true); setError('')
@@ -24,6 +30,7 @@ function Login({ supabase }: { supabase: SupabaseClient }) {
       const input = form.elements.namedItem('password') as HTMLInputElement | null
       if (input) input.value = ''
       setBusy(false)
+      lock.current = false
     }
   }
   return <section className="panel login">
@@ -40,7 +47,7 @@ function Login({ supabase }: { supabase: SupabaseClient }) {
   </section>
 }
 
-function Workspace({ api }: { api: Api }) {
+function Workspace({ api, demoAvailable }: { api: Api; demoAvailable: boolean }) {
   const [actor, setActor] = useState<Actor | null>(null)
   const [error, setError] = useState('')
   const [checking, setChecking] = useState(true)
@@ -73,8 +80,8 @@ function Workspace({ api }: { api: Api }) {
       <ReportForm api={api} onCreated={created} />
       <Reports api={api} municipal={false} revision={revision} createdReportId={createdReportId} />
     </>}
-    {actor?.role === 'encargado_municipal' && <Reports api={api} municipal />}
-    {actor?.role === 'chofer' && <p className="panel">La cuenta tiene rol chofer. Este frontend de pruebas cubre las operaciones de ciudadano y encargado municipal.</p>}
+    {actor?.role === 'encargado_municipal' && <MunicipalWorkspace api={api} demoAvailable={demoAvailable} />}
+    {actor?.role === 'chofer' && <DriverWorkspace api={api} />}
   </>
 }
 
@@ -112,14 +119,15 @@ function Diagnostics({ api, apiUrl, entries, clear }: {
   </section>
 }
 
-export default function App({ supabase, config, configErrors = [] }: {
-  supabase: SupabaseClient | null; config: PublicConfig; configErrors?: string[]
+export default function App({ supabase, config, configErrors = [], demoAvailable = false }: {
+  supabase: SupabaseClient | null; config: PublicConfig; configErrors?: string[]; demoAvailable?: boolean
 }) {
   const [session, setSession] = useState<Session | null>(null)
   const [initializing, setInitializing] = useState(Boolean(supabase))
   const [authError, setAuthError] = useState('')
   const [signingOut, setSigningOut] = useState(false)
   const [entries, setEntries] = useState<RequestEntry[]>([])
+  const [sessionRejected, setSessionRejected] = useState(false)
 
   const api = useMemo(() => createApi({
     baseUrl: config.apiUrl,
@@ -130,6 +138,7 @@ export default function App({ supabase, config, configErrors = [] }: {
       return data.session?.access_token ?? null
     },
     onRequest: (entry) => setEntries((current) => [entry, ...current].slice(0, 50)),
+    onUnauthorized: () => { setSessionRejected(true); setAuthError('La sesión no fue aceptada por FastAPI. Vuelve a iniciar sesión.') },
   }), [supabase, config.apiUrl])
 
   useEffect(() => {
@@ -139,7 +148,10 @@ export default function App({ supabase, config, configErrors = [] }: {
     // El callback permanece síncrono para no bloquear el candado interno de Auth.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       receivedEvent = true
-      if (active) { setSession(nextSession); setInitializing(false) }
+      if (active) {
+        setSession(nextSession); setInitializing(false)
+        if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED' || !nextSession) { setSessionRejected(false); setAuthError('') }
+      }
     })
     void supabase.auth.getSession().then(({ data, error }) => {
       if (!active) return
@@ -157,14 +169,14 @@ export default function App({ supabase, config, configErrors = [] }: {
     try {
       const { error } = await supabase!.auth.signOut({ scope: 'local' })
       if (error) setAuthError(error.message)
-      else { setSession(null); setEntries([]) }
+      else { setSession(null); setEntries([]); setSessionRejected(false) }
     } catch { setAuthError('No se pudo cerrar la sesión. Intenta nuevamente.') }
     finally { setSigningOut(false) }
   }
 
   return <main>
     <header>
-      <div><h1>RECIWISE</h1><p>Pruebas de reportes ciudadanos y consulta municipal</p></div>
+      <div className="app-brand"><Icon name="leaf" size={32} /><div><h1>RECIWISE</h1><p>Tu reporte, una ciudad mejor</p></div></div>
       {session && <div className="session"><span>{session.user.email}</span><button type="button" disabled={signingOut} onClick={() => void logout()}>Cerrar sesión</button></div>}
     </header>
     {configErrors.length > 0 && <section className="panel" role="alert">
@@ -173,8 +185,8 @@ export default function App({ supabase, config, configErrors = [] }: {
       <ul>{configErrors.map((error) => <li key={error}>{error}</li>)}</ul>
     </section>}
     {authError && <p className="error" role="alert">{authError}</p>}
-    {initializing ? <p role="status">Recuperando sesión…</p> : supabase && (session
-      ? <Workspace key={session.user.id} api={api} />
+    {initializing ? <p role="status">Recuperando sesión…</p> : supabase && (session && !sessionRejected
+      ? <Workspace key={session.user.id} api={api} demoAvailable={demoAvailable} />
       : <Login supabase={supabase} />)}
     <Diagnostics api={api} apiUrl={config.apiUrl} entries={entries} clear={() => setEntries([])} />
   </main>

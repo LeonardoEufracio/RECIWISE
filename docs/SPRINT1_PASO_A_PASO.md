@@ -1,6 +1,8 @@
 # RECIWISE — Sprint 1: guía de implementación
 
-**Ventana de trabajo del plan maestro:** 25 de octubre al 1 de noviembre de 2026. **Estado de verificación:** código local generado y probado; no hay evidencia de Supabase conectado, frontend integrado, repositorio del equipo ni despliegue.
+**Ventana de trabajo del plan maestro:** 25 de octubre al 1 de noviembre de 2026; hackatón **19 de noviembre de 2026**. **Revisión de alcance: 29/10/2026.** Backend y frontend implementados, con pruebas locales y evidencia manual previa diferenciadas en [API_SPRINT1.md](API_SPRINT1.md). La aceptación integrada y el despliegue de la versión nueva siguen pendientes.
+
+**Decisión vigente:** conservar el proyecto Supabase principal para la aplicación, sin crear un segundo proyecto por ahora. No aplicar 003 ni ejecutar pruebas destructivas en el principal. Desarrollo/verificación con PostgreSQL local aislado y servicios simulados; [prioridades y criterios D2](PLAN_D2_HACKATON.md). Las pruebas con Storage real quedan pendientes y no detienen funciones independientes.
 
 ## Objetivo demostrable (1 de noviembre)
 
@@ -8,39 +10,37 @@ Una persona entra con cuenta ciudadana, envía una descripción y ubicación des
 
 ## Paso A — Base de datos (D2)
 
-1. Crear un proyecto de prueba Supabase y guardar secretos solo en el backend.
-2. Abrir `migrations/001_sprint1.sql` y ejecutarlo en SQL Editor. No ejecutar `002` como requisito del Sprint 1.
-3. Comprobar en Database que existen `profiles`, `reports`, `report_photos`, `vehicles`, `service_sites`, `shifts`, `events`, `event_reports` y `grouping_decisions`.
-4. Confirmar en Storage que existe el bucket **privado** `reciwise-reportes`.
-5. Crear cuenta de prueba ciudadana mediante Auth y confirmar que existe `profiles` con `role='ciudadano'`.
-6. Crear segunda cuenta de prueba y promocionarla como `encargado_municipal` **solo** en SQL Editor después de verificar identidad. Nunca exponer una opción de selección de rol privilegiado en el registro público.
+1. Conservar las credenciales, cuentas, bucket y datos del proyecto principal. No copiarlo a las pruebas ni crear RECIWISE-TEST.
+2. No ejecutar 001, 002, 003 ni su reversión en el compartido desde esta guía. El backend nuevo requiere 003; si allí sigue 001, rechazará el arranque. No desactivar la guardia para continuar.
+3. Reutilizar `.venv\Scripts\python.exe tests/run_isolated_postgres.py --phase all`: crea una base PostgreSQL local propia, aplica 001+003 solo allí, configura Auth/Storage ficticios y retira el contenedor al terminar. No es un servidor persistente de demo.
+4. Revisar JUnit y manifiesto en `.test-artifacts/`; distinguir los casos PostgreSQL, SQLite y Storage simulado y las omisiones remotas.
+5. Para la demostración, identificar primero entorno/esquema/versión compatibles y declarar si usa servicios simulados. Una integración de esta rama con el principal requiere una autorización posterior de despliegue/003.
+6. Mantener roles privilegiados administrados; nunca ofrecer selección pública de encargado/chofer. La evidencia histórica de cuentas/roles/bucket está en 6.1 de la guía API y no se reescribe como inexistente ni se presenta como una nueva validación.
 
-**Verificación:** esquema creado sin errores, rol ciudadano por defecto, bucket privado y roles restringidos.
+**Verificación:** exclusiones, slots, durabilidad, recuperación, guardia y permisos probados en su entorno explícito; sin modificaciones del principal. Privacidad/compensación de Storage real bajo fallos quedan pendientes.
 
 ## Paso B — Levantar API FastAPI (D2)
 
-1. Instalar Python compatible con las dependencias y crear entorno virtual.
-2. `pip install -r requirements.txt`.
-3. Copiar `.env.example` a `.env` y completar `DATABASE_URL`, `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` exclusivamente en máquina/servidor.
-4. Verificar que Supabase usa claves JWT asimétricas RS256/ES256; esta API inicial valida JWKS y no admite automáticamente proyectos antiguos con HS256.
-5. `uvicorn app.main:app --reload` y abrir `http://127.0.0.1:8000/docs`.
-6. `pytest -q` para ejecutar pruebas locales.
-7. Desde React o un cliente HTTP con JWT de usuario real, crear un reporte y consultar `GET /reports/mine`.
-8. Con un JWT de encargado, consultar `GET /municipal/reports` y verificar la ubicación, con `latitud/longitud` en la respuesta como `latitude/longitude`.
-9. Confirmar que un ciudadano obtiene `403` al pedir `/municipal/reports`.
+1. Reutilizar el entorno Python y dependencias existentes. En otra instalación, instalar `requirements.txt`; no reemplazar `.env` del proyecto ni usar sus secretos en fixtures.
+2. Ejecutar el runner aislado del paso A para regresión. Mantiene la guardia real en PostgreSQL y sustituye servicios externos con implementaciones explícitas de pruebas.
+3. Para servir React, preparar y ensayar un entorno compatible independiente de las transacciones efímeras del runner. **No iniciar esta rama con el `.env` del principal si su esquema no cumple 003.**
+4. Solo en el entorno compatible preparado, iniciar FastAPI con `python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`; consultar `/ready`. `/health` solo comprueba el proceso.
+5. El backend conserva JWKS RS256/ES256; no usar HS256 ni una cabecera de actor ficticio como si fuera un JWT real. Los workers internos de tests no se despliegan como API pública.
+6. Ensayar con React o cliente HTTP: `/me`, crear reporte, consultar `/reports/mine` y recuperar el mismo UUID como encargado con `GET /municipal/reports`.
+7. Verificar coordenadas `latitude`/`longitude`, denegación municipal `403` al ciudadano y persistencia tras recarga/reinicio. Registrar si Auth/Storage/GPS son simulados o reales, sin guardar tokens.
 
-**Verificación:** prueba integrada con Supabase real pendiente hasta que el equipo conecte el proyecto. Las pruebas locales SQLite **no** la sustituyen.
+**Verificación:** aceptación integrada de la versión de demo pendiente. Hay evidencia manual previa con Supabase y automática local; cada una conserva su alcance. No se repiten ahora pruebas remotas ni se consideran equivalentes SQLite, PostgreSQL local y Supabase Storage real.
 
 ## Paso C — Frontend móvil primero (D1)
 
-1. Crear React + Vite, diseño responsive de las pantallas de login, registro ciudadano, `Mis reportes` y lista/mapa municipal.
+1. Reutilizar el frontend React + Vite existente: login, formulario GPS/mapa, `Mis reportes`, fotos, listado/mapa municipal e historial HTTP. No rehacer pantallas funcionales ni exigir diseño visual definitivo.
 2. Usar Supabase Auth para login. Cada petición protegida a FastAPI lleva `Authorization: Bearer <access_token>`.
 3. Formulario envía `description`, `latitude`, `longitude`, `observed_at` (ISO 8601 con zona horaria) y `waste_type` opcional. El servidor genera `created_at`.
 4. Con Leaflet, pintar marcadores provenientes de `GET /municipal/reports`; no dibujar puntos inventados como si fueran municipales.
-5. Mostrar errores de validación, falta de permisos, conexión y ubicación. Incorporar carga de foto opcional desde móvil.
+5. Conservar errores de validación, permisos, conexión y ubicación, así como fotos opcionales. Un fallo de foto no debe exigir volver a crear el reporte.
 6. Probar en pantalla pequeña y grande. La conversión a PWA o APK puede venir después de asegurar el flujo principal.
 
-**Verificación:** ciudadano y encargado ven sus pantallas respectivas sin exponer los secretos del backend.
+**Verificación:** ciudadano y encargado ven sus pantallas sin exponer secretos. Ver [evidencia previa de ubicación](VERIFICACION_UBICACION_SPRINT1.md); GPS físico y HTTPS del teléfono siguen siendo una comprobación manual pendiente.
 
 ## Paso D — Preparación D3 (responsable de IA/optimización)
 
@@ -61,14 +61,17 @@ Una persona entra con cuenta ciudadana, envía una descripción y ubicación des
 
 ## Cierre del Sprint 1 (lista de comprobación)
 
-- [ ] Supabase de prueba creado y migración ejecutada.
-- [ ] Dos cuentas de prueba con roles correctos.
-- [ ] Backend conectado a PostgreSQL y JWT de Supabase.
+- [x] Operaciones previstas de D2 implementadas, incluidos recursos y permisos; evidencia en la guía API.
+- [x] Concurrencia, recuperación y guardia verificadas en PostgreSQL aislado y Storage simulado.
+- [ ] Entorno y versión compatibles de demo identificados, sin tocar el principal ni omitir la guardia.
+- [ ] Identidades/roles de la demo verificados y servicios reales/simulados declarados.
 - [ ] Ciudadano puede enviar y consultar su reporte desde una pantalla móvil.
 - [ ] Encargado puede verlo en un mapa usando la API.
 - [ ] Fotos opcionales probadas end-to-end (si se incluyen en la demo inicial).
 - [ ] Ejemplos simulados D3 revisados y evaluación separada por evento.
 - [ ] Contratos D1–D2–D3 confirmados.
-- [ ] Versión conjunta desplegada y demostrada.
+- [ ] Versión conjunta ensayada y aceptada, con evidencia de IDs/HTTP/persistencia. Si requiere despliegue en el principal, contar antes con autorización de migración/despliegue.
 
 No marcar estas casillas como completadas solo por tener scripts o archivos preparados.
+
+Storage real bajo fallos, supervisión del alojamiento, respaldo/restauración y autorización de 003 siguen como pendientes del despliegue. No bloquean el contrato/adaptador y la revisión municipal local de Sprint 2. Secuencia propuesta hasta el 19/11 en [PLAN_D2_HACKATON.md](PLAN_D2_HACKATON.md).

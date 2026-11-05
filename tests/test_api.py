@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
+import pytest
 from app.security import Actor
 
 
@@ -47,6 +48,55 @@ def test_invalid_report_date_and_coordinates(test_env):
     assert client.post("/reports", json=example).status_code == 422
     example["observed_at"] = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
     assert client.post("/reports", json=example).status_code == 422
+
+
+@pytest.mark.parametrize("description", [
+    pytest.param("", id="empty"),
+    pytest.param("   ", id="spaces_only"),
+    pytest.param("\t \n ", id="whitespace_only"),
+    pytest.param("a", id="short_one"),
+    pytest.param("ab", id="short_two"),
+    pytest.param(" a ", id="short_after_trim_one"),
+    pytest.param(" ab ", id="short_after_trim_two"),
+    pytest.param("\t ab \n", id="short_after_whitespace_trim"),
+    pytest.param("x" * 2001, id="too_long"),
+    pytest.param("  " + "x" * 2001 + "  ", id="too_long_after_trim"),
+    pytest.param(None, id="null_not_string"),
+    pytest.param(123, id="number_not_string"),
+])
+def test_report_description_invalid_returns_422_without_persisting(test_env, description):
+    client, _, _ = test_env
+    example = {**payload(), "description": description}
+    response = client.post("/reports", json=example)
+    assert response.status_code == 422, response.text
+    assert any(error["loc"] == ["body", "description"]
+               for error in response.json()["detail"])
+    assert client.get("/reports/mine").json() == []
+
+
+@pytest.mark.parametrize(("description", "expected"), [
+    pytest.param("abc", "abc", id="minimum"),
+    pytest.param("  abc  ", "abc", id="padded_minimum"),
+    pytest.param("  Residuos cerca del parque  ", "Residuos cerca del parque", id="padded_valid"),
+    pytest.param("\t Basura en el parque \n", "Basura en el parque", id="whitespace_trim"),
+    pytest.param("Basura  junto al parque", "Basura  junto al parque", id="preserves_inner_spaces"),
+    pytest.param("x" * 2000, "x" * 2000, id="maximum"),
+    pytest.param("  " + "x" * 2000 + "  ", "x" * 2000, id="padded_maximum"),
+])
+def test_report_description_valid_is_trimmed_and_persisted(test_env, description, expected):
+    client, state, _ = test_env
+    example = {**payload(), "description": description}
+    response = client.post("/reports", json=example)
+    assert response.status_code == 201, response.text
+    report = response.json()
+    assert report["description"] == expected
+    assert report["citizen_id"] == str(state["citizen"])
+    assert report["latitude"] == example["latitude"]
+    assert report["longitude"] == example["longitude"]
+    assert report["status"] == "recibido"
+    saved = client.get(f"/reports/{report['id']}")
+    assert saved.status_code == 200
+    assert saved.json()["description"] == expected
 
 
 def test_vehicle_and_shifts(test_env):

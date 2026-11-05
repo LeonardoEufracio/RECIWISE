@@ -1,0 +1,17 @@
+.driver-workspace { max-width: 1050px; margin: 0 auto 2rem; color: #123650; }
+.driver-workspace .page-heading { border-left: 5px solid #009a91; padding-left: 1rem; }
+.driver-workspace button { min-height: 48px; }
+.driver-assignment { display: grid; gap: 1rem; }
+.driver-assignment > .panel, .driver-assignment > dl { margin: 0; }
+.driver-actions { display: grid; gap: .7rem; grid-template-columns: repeat(3, 1fr); margin-top: 1rem; }
+.driver-workspace .identifier, .report-choice .identifier { overflow-wrap: anywhere; }
+.driver-workspace .route-map { width: 100%; }
+.report-choice { align-items: flex-start; padding: .7rem; border-bottom: 1px solid #d6e5e8; }
+.report-choice small { display: block; }
+@media (max-width: 650px) {
+  .driver-actions { grid-template-columns: 1fr; }
+  .driver-workspace { width: 100%; }
+  .driver-workspace .proposal-metrics { grid-template-columns: 1fr; }
+  .driver-workspace .timeline { padding-left: 1.2rem; }
+  .driver-workspace .toolbar { align-items: flex-start; }
+}
