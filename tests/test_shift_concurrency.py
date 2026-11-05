@@ -23,10 +23,16 @@ def test_simultaneous_reservations_are_excluded_by_postgres(pg_case, same):
     b = shift_payload(ids, driver_id=str(ids["driver2"]) if same == "vehicle" else str(ids["driver"]),
                       vehicle_id=str(ids["vehicle2"]) if same == "driver" else str(ids["vehicle"]))
     barrier = threading.Barrier(2, timeout=10)
+    synchronized_threads = set()
+    synchronization_lock = threading.Lock()
 
     def both_read_before_insert(conn, cursor, statement, parameters, context, many):
         if statement.startswith("SELECT shifts.id") and "shifts.starts_at <" in statement:
-            barrier.wait()
+            with synchronization_lock:
+                first = threading.get_ident() not in synchronized_threads
+                synchronized_threads.add(threading.get_ident())
+            if first:
+                barrier.wait()
 
     event.listen(engine, "after_cursor_execute", both_read_before_insert)
     try:

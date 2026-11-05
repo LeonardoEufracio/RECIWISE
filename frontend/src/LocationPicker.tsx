@@ -13,8 +13,8 @@ function validPoint(point: Coordinates) {
     && Number.isFinite(point.longitude) && Math.abs(point.longitude) <= 180
 }
 
-export default function LocationPicker({ location, onChange, disabled }: {
-  location: ReportLocation | null; onChange: (location: ReportLocation) => void; disabled: boolean
+export default function LocationPicker({ location, onChange, disabled, purpose = 'report' }: {
+  location: ReportLocation | null; onChange: (location: ReportLocation) => void; disabled: boolean; purpose?: 'report' | 'site' | 'event'
 }) {
   const [mode, setMode] = useState<'device' | 'map' | null>(null)
   const [locating, setLocating] = useState(false)
@@ -73,15 +73,16 @@ export default function LocationPicker({ location, onChange, disabled }: {
     }
   }
 
-  return <section className="location-picker" aria-label="Ubicación del reporte">
-    <h3>¿Dónde está la acumulación?</h3>
+  const name = purpose === 'site' ? 'sitio' : purpose === 'event' ? 'evento' : 'reporte'
+  return <section className="location-picker" aria-label={'Ubicación del ' + name}>
+    <h3>{purpose === 'site' ? '¿Dónde está el punto operativo?' : '¿Dónde está la acumulación?'}</h3>
     <div className="actions location-options">
       <button type="button" disabled={disabled || locating} aria-pressed={mode === 'device'} onClick={useDeviceLocation}>
         {locating ? 'Obteniendo ubicación…' : 'Usar mi ubicación'}
       </button>
       <button type="button" disabled={disabled} aria-pressed={mode === 'map'} onClick={chooseOnMap}>Elegir en el mapa</button>
     </div>
-    <p className="hint">El GPS solo se solicita al pulsar «Usar mi ubicación». La selección permanece en esta pantalla hasta confirmar y enviar el reporte.</p>
+    <p className="hint">El GPS solo se solicita al pulsar «Usar mi ubicación». La selección permanece en esta pantalla hasta confirmar y enviar el {name}.</p>
     {locating && <p role="status">Buscando tu ubicación. Si aparece una solicitud del navegador, puedes aceptar o elegir en el mapa.</p>}
     {error && <p className="error" role="alert">{error}</p>}
     {mode && <>
@@ -93,7 +94,7 @@ export default function LocationPicker({ location, onChange, disabled }: {
       <p className="hint">Origen: {location.source === 'device' ? 'ubicación del dispositivo' : 'selección en el mapa'}. Comprueba que el marcador señale la acumulación, no solo dónde estás.</p>
       {location.source === 'device' && location.accuracy !== undefined && <p>Precisión estimada: ±{Math.round(location.accuracy)} m.</p>}
       {location.confirmed
-        ? <><p className="success">Ubicación confirmada. Se incluirá al pulsar «Registrar reporte».</p>
+        ? <><p className="success">{purpose === 'report' ? 'Ubicación confirmada. Se incluirá al pulsar «Registrar reporte».' : 'Ubicación confirmada. Revisa el formulario antes de guardar.'}</p>
           <button type="button" disabled={disabled} onClick={chooseOnMap}>Corregir ubicación</button></>
         : <><p>Revisa el punto. Puedes tocar otro lugar o arrastrar el marcador para corregirlo y después confirmar.</p>
           <button type="button" disabled={disabled || locating} onClick={() => onChange({ ...location, confirmed: true })}>Confirmar ubicación</button></>}

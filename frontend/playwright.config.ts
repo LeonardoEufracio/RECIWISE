@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: '**/integrated/**', // Requires its own isolated PostgreSQL/JWT runner.
+  testIgnore: ['**/integrated/**', '**/production/**'], // Independent PostgreSQL and production-build runners.
   workers: 1,
   reporter: 'list',
   use: {
@@ -21,6 +21,7 @@ export default defineConfig({
       VITE_API_URL: 'http://127.0.0.1:8000',
       VITE_SUPABASE_URL: 'https://frontend-test.supabase.co',
       VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_browser_test',
+      VITE_ENABLE_DEMO: 'true', // Still requires a municipal /me; never enabled by the production build.
     },
   },
 })

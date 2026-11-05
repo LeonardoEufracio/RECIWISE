@@ -1,12 +1,39 @@
 {
   "schema": "003",
-  "source": "fresh isolated PostgreSQL; unchanged migrations 001 + 003",
+  "required_migrations": [
+    "001",
+    "002",
+    "003"
+  ],
+  "source": "fresh isolated PostgreSQL; unchanged migrations 001 + 002 + 003",
   "migration_sha256": {
     "001_sprint1.sql": "937d679a6116c658ee245d47ad7bf3c1867bb81d8b8b9faeb3dda12e55575f06",
+    "002_sprint2_3_estructura.sql": "e7d4dc03c1a8ac3c30ed710f2c794453a62997fb02a5db8435cdb92800fa2b23",
     "003_sprint1_concurrencia.sql": "320ff74540cfbb4e49c680ba17036184fd4b0fc585c76f26a4314d838799906c"
   },
   "catalog": {
     "tables": [
+      {
+        "table_name": "event_reports",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "events",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "grouping_decisions",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
       {
         "table_name": "photo_upload_operations",
         "relkind": "r",
@@ -36,6 +63,20 @@
         "relforcerowsecurity": false
       },
       {
+        "table_name": "route_plans",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "table_name": "route_stops",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
         "table_name": "service_sites",
         "relkind": "r",
         "relpersistence": "p",
@@ -50,6 +91,13 @@
         "relforcerowsecurity": false
       },
       {
+        "table_name": "stop_incidents",
+        "relkind": "r",
+        "relpersistence": "p",
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
         "table_name": "vehicles",
         "relkind": "r",
         "relpersistence": "p",
@@ -58,6 +106,249 @@
       }
     ],
     "columns": [
+      {
+        "table_name": "event_reports",
+        "column_name": "report_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "event_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "linked_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "linked_by",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "linkage_method",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "factors",
+        "type": "jsonb",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "event_reports",
+        "column_name": "config_version",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "events",
+        "column_name": "latitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "longitude",
+        "type": "double precision",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "state",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'en_revision'::text"
+      },
+      {
+        "table_name": "events",
+        "column_name": "intervention_type",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "priority_score",
+        "type": "double precision",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "priority_factors",
+        "type": "jsonb",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "priority_config_version",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "events",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "events",
+        "column_name": "closed_at",
+        "type": "timestamp with time zone",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "report_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "candidate_event_id",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "resulting_event_id",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "decision",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "factors",
+        "type": "jsonb",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'{}'::jsonb"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "config_version",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "decided_by",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "decided_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "column_name": "notes",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
       {
         "table_name": "photo_upload_operations",
         "column_name": "id",
@@ -338,6 +629,222 @@
         "default_expression": "'recibido'::text"
       },
       {
+        "table_name": "route_plans",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "shift_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "status",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'propuesta'::text"
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "created_by",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "approved_by",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "approved_at",
+        "type": "timestamp with time zone",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "algorithm_version",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "matrix_source",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "input_snapshot",
+        "type": "jsonb",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "configuration",
+        "type": "jsonb",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "distance_m",
+        "type": "double precision",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "estimated_duration_seconds",
+        "type": "double precision",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "geometry_geojson",
+        "type": "jsonb",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "excluded_events",
+        "type": "jsonb",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'[]'::jsonb"
+      },
+      {
+        "table_name": "route_plans",
+        "column_name": "limitations",
+        "type": "jsonb",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'[]'::jsonb"
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "route_plan_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "event_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "stop_order",
+        "type": "integer",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "estimated_service_minutes",
+        "type": "double precision",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "status",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "'pendiente'::text"
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "visited_at",
+        "type": "timestamp with time zone",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "route_stops",
+        "column_name": "recorded_by",
+        "type": "uuid",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
         "table_name": "service_sites",
         "column_name": "id",
         "type": "uuid",
@@ -482,6 +989,69 @@
         "default_expression": "now()"
       },
       {
+        "table_name": "stop_incidents",
+        "column_name": "id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "gen_random_uuid()"
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "stop_id",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "reported_by",
+        "type": "uuid",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "incident_type",
+        "type": "text",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "description",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "evidence_storage_path",
+        "type": "text",
+        "not_null": false,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": null
+      },
+      {
+        "table_name": "stop_incidents",
+        "column_name": "created_at",
+        "type": "timestamp with time zone",
+        "not_null": true,
+        "attidentity": "",
+        "attgenerated": "",
+        "default_expression": "now()"
+      },
+      {
         "table_name": "vehicles",
         "column_name": "id",
         "type": "uuid",
@@ -546,6 +1116,150 @@
       }
     ],
     "constraints": [
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_event_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (event_id) REFERENCES events(id)"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linkage_method_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((linkage_method = ANY (ARRAY['automatica'::text, 'manual'::text])))"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linked_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (linked_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (report_id)"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_report_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE"
+      },
+      {
+        "table_name": "events",
+        "conname": "events_closed_timestamp",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((state <> 'cerrado'::text) OR (closed_at IS NOT NULL)))"
+      },
+      {
+        "table_name": "events",
+        "conname": "events_latitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((latitude >= ('-90'::integer)::double precision) AND (latitude <= (90)::double precision)))"
+      },
+      {
+        "table_name": "events",
+        "conname": "events_longitude_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK (((longitude >= ('-180'::integer)::double precision) AND (longitude <= (180)::double precision)))"
+      },
+      {
+        "table_name": "events",
+        "conname": "events_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "events",
+        "conname": "events_state_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((state = ANY (ARRAY['en_revision'::text, 'abierto'::text, 'programado'::text, 'atendido'::text, 'cerrado'::text, 'descartado'::text])))"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_candidate_event_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (candidate_event_id) REFERENCES events(id)"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decided_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (decided_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decision_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((decision = ANY (ARRAY['agrupar'::text, 'separar'::text, 'revisar'::text, 'mantener_separado'::text])))"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_report_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (report_id) REFERENCES reports(id)"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_resulting_event_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (resulting_event_id) REFERENCES events(id)"
+      },
       {
         "table_name": "photo_upload_operations",
         "conname": "photo_operation_owned_path",
@@ -772,6 +1486,159 @@
         "definition": "CHECK ((status = ANY (ARRAY['recibido'::text, 'en_revision'::text, 'programado'::text, 'atendido'::text, 'descartado'::text])))"
       },
       {
+        "table_name": "route_plans",
+        "conname": "route_plans_approved_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (approved_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((((approved_by IS NULL) AND (approved_at IS NULL)) OR ((approved_by IS NOT NULL) AND (approved_at IS NOT NULL))))"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_created_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_distance_m_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((distance_m >= (0)::double precision))"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_estimated_duration_seconds_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((estimated_duration_seconds >= (0)::double precision))"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_shift_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (shift_id) REFERENCES shifts(id)"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_status_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((status = ANY (ARRAY['propuesta'::text, 'aprobada'::text, 'en_ejecucion'::text, 'finalizada'::text, 'cancelada'::text])))"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_estimated_service_minutes_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((estimated_service_minutes > (0)::double precision))"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_event_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (event_id) REFERENCES events(id)"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_recorded_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (recorded_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_event_id_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (route_plan_id, event_id)"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (route_plan_id) REFERENCES route_plans(id) ON DELETE CASCADE"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_stop_order_key",
+        "contype": "u",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "UNIQUE (route_plan_id, stop_order)"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_status_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((status = ANY (ARRAY['pendiente'::text, 'atendida'::text, 'incidencia'::text, 'no_atendida'::text])))"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_stop_order_check",
+        "contype": "c",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "CHECK ((stop_order > 0))"
+      },
+      {
         "table_name": "service_sites",
         "conname": "service_sites_latitude_check",
         "contype": "c",
@@ -898,6 +1765,33 @@
         "definition": "EXCLUDE USING gist (vehicle_id WITH =, tstzrange(starts_at, ends_at, '[)'::text) WITH &&) WHERE ((status = 'programado'::text))"
       },
       {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_pkey",
+        "contype": "p",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_reported_by_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (reported_by) REFERENCES profiles(id)"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_stop_id_fkey",
+        "contype": "f",
+        "convalidated": true,
+        "condeferrable": false,
+        "condeferred": false,
+        "definition": "FOREIGN KEY (stop_id) REFERENCES route_stops(id)"
+      },
+      {
         "table_name": "vehicles",
         "conname": "vehicles_capacity_kg_check",
         "contype": "c",
@@ -936,6 +1830,230 @@
     ],
     "foreign_key_triggers": [
       {
+        "table_name": "event_reports",
+        "conname": "event_reports_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linked_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linked_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linked_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_linked_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_cascade_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "event_reports",
+        "conname": "event_reports_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_candidate_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_candidate_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_candidate_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_candidate_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decided_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decided_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decided_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_decided_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_report_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_resulting_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_resulting_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_resulting_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "grouping_decisions",
+        "conname": "grouping_decisions_resulting_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
         "table_name": "photo_upload_operations",
         "conname": "photo_upload_operations_actor_id_fkey",
         "function_schema": "pg_catalog",
@@ -1096,6 +2214,198 @@
         "tgenabled": "O"
       },
       {
+        "table_name": "route_plans",
+        "conname": "route_plans_approved_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_approved_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_approved_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_approved_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_created_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_shift_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_shift_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_shift_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_plans",
+        "conname": "route_plans_shift_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_event_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_recorded_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_recorded_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_recorded_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_recorded_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_cascade_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "route_stops",
+        "conname": "route_stops_route_plan_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
         "table_name": "shifts",
         "conname": "shifts_created_by_fkey",
         "function_schema": "pg_catalog",
@@ -1250,6 +2560,70 @@
       {
         "table_name": "shifts",
         "conname": "shifts_vehicle_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_reported_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_reported_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_reported_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_reported_by_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_stop_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_ins",
+        "tgtype": 5,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_stop_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_check_upd",
+        "tgtype": 17,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_stop_id_fkey",
+        "function_schema": "pg_catalog",
+        "proname": "RI_FKey_noaction_del",
+        "tgtype": 9,
+        "tgenabled": "O"
+      },
+      {
+        "table_name": "stop_incidents",
+        "conname": "stop_incidents_stop_id_fkey",
         "function_schema": "pg_catalog",
         "proname": "RI_FKey_noaction_upd",
         "tgtype": 17,
@@ -1257,6 +2631,113 @@
       }
     ],
     "indexes": [
+      {
+        "table_name": "event_reports",
+        "index_name": "event_reports_event_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "event_id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "event_reports",
+        "index_name": "event_reports_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "report_id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "events",
+        "index_name": "events_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "grouping_decisions",
+        "index_name": "grouping_decisions_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "grouping_decisions",
+        "index_name": "grouping_decisions_report_idx",
+        "amname": "btree",
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "report_id",
+          "decided_at"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.timestamptz_ops"
+        ]
+      },
       {
         "table_name": "photo_upload_operations",
         "index_name": "photo_operations_due_idx",
@@ -1520,6 +3001,115 @@
         ]
       },
       {
+        "table_name": "route_plans",
+        "index_name": "one_approved_plan_per_shift",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "shift_id"
+        ],
+        "predicate": "(status = ANY (ARRAY['aprobada'::text, 'en_ejecucion'::text, 'finalizada'::text]))",
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "route_plans",
+        "index_name": "route_plans_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "route_stops",
+        "index_name": "route_stops_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "route_stops",
+        "index_name": "route_stops_route_plan_id_event_id_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "route_plan_id",
+          "event_id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
+        "table_name": "route_stops",
+        "index_name": "route_stops_route_plan_id_stop_order_key",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 2,
+        "indnatts": 2,
+        "keys": [
+          "route_plan_id",
+          "stop_order"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops",
+          "pg_catalog.int4_ops"
+        ]
+      },
+      {
         "table_name": "service_sites",
         "index_name": "service_sites_pkey",
         "amname": "btree",
@@ -1658,6 +3248,27 @@
         ]
       },
       {
+        "table_name": "stop_incidents",
+        "index_name": "stop_incidents_pkey",
+        "amname": "btree",
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "indisvalid": true,
+        "indisready": true,
+        "indislive": true,
+        "indnullsnotdistinct": false,
+        "indnkeyatts": 1,
+        "indnatts": 1,
+        "keys": [
+          "id"
+        ],
+        "predicate": null,
+        "operator_classes": [
+          "pg_catalog.uuid_ops"
+        ]
+      },
+      {
         "table_name": "vehicles",
         "index_name": "vehicles_label_key",
         "amname": "btree",
@@ -1702,6 +3313,90 @@
     ],
     "client_access": [
       {
+        "table_name": "event_reports",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "event_reports",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "events",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "events",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "grouping_decisions",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "grouping_decisions",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
         "table_name": "photo_upload_operations",
         "rolname": "anon",
         "can_select": false,
@@ -1814,6 +3509,62 @@
         "column_update": false
       },
       {
+        "table_name": "route_plans",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "route_plans",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "route_stops",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "route_stops",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
         "table_name": "service_sites",
         "rolname": "anon",
         "can_select": false,
@@ -1857,6 +3608,34 @@
       },
       {
         "table_name": "shifts",
+        "rolname": "authenticated",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "stop_incidents",
+        "rolname": "anon",
+        "can_select": false,
+        "can_insert": false,
+        "can_update": false,
+        "can_delete": false,
+        "can_truncate": false,
+        "can_reference": false,
+        "can_trigger": false,
+        "column_select": false,
+        "column_insert": false,
+        "column_update": false
+      },
+      {
+        "table_name": "stop_incidents",
         "rolname": "authenticated",
         "can_select": false,
         "can_insert": false,

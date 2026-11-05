@@ -49,7 +49,7 @@ export default function LocationMap({ location, editable, onPick }: {
 }) {
   const [tileError, setTileError] = useState(false)
   return <div role="region" aria-label="Mapa para elegir la ubicación del reporte">
-    <MapContainer center={[-12.05, -75.2]} zoom={12} className="map location-map" scrollWheelZoom={false}>
+    <MapContainer center={[-12.05, -75.2]} zoom={12} zoomAnimation={false} fadeAnimation={false} className="map location-map" scrollWheelZoom={false}>
       <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19}
         eventHandlers={{ tileerror: () => setTileError(true) }} />

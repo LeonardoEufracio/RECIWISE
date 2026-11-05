@@ -9,6 +9,27 @@ function setup(fetcher: typeof fetch, getAccessToken: () => Promise<string | nul
 }
 
 describe('Comunicación con FastAPI', () => {
+  it.each(['caller', 'timeout'])('conserva cancelación %s y tiempo límite al pasar una señal', async (source) => {
+    const caller = new AbortController(); const timeout = new AbortController()
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeout.signal)
+    const fetcher = vi.fn<typeof fetch>().mockImplementation((_url, init) => new Promise((_resolve, reject) => {
+      init!.signal!.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
+    }))
+    const { api, entries } = setup(fetcher)
+    const pending = api('/me', { signal: caller.signal })
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    ;(source === 'caller' ? caller : timeout).abort()
+    await expect(pending).rejects.toMatchObject({ status: null })
+    expect(entries).toHaveLength(1)
+  })
+  it.each([401, 403, 404, 409, 422, 503])('presenta HTTP %s sin detalles y no reintenta escrituras', async (status) => {
+    const onUnauthorized = vi.fn()
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response('', { status }))
+    const api = createApi({ baseUrl: 'http://api.test', getAccessToken: async () => 'token-ficticio', onRequest: vi.fn(), onUnauthorized, fetcher })
+    await expect(api('/municipal/shifts', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(onUnauthorized).toHaveBeenCalledTimes(status === 401 ? 1 : 0)
+  })
   it('obtiene el token actual en cada petición y registra HTTP sin credenciales', async () => {
     const token = vi.fn().mockResolvedValueOnce('primer-token').mockResolvedValueOnce('token-renovado')
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => new Response('{"role":"ciudadano"}', { status: 200 }))

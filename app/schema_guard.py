@@ -1,4 +1,4 @@
-"""Fail-closed, catalog-only verification of the approved 001 + 003 contract.
+"""Fail-closed, catalog-only verification of the approved 001 + 002 + 003 contract.
 
 The manifest is a reviewed build artifact from disposable PostgreSQL, never
 learned from the runtime database. There is no migration or bypass switch here.
@@ -10,8 +10,10 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 REQUIRED_SCHEMA = "003"
+REQUIRED_MIGRATIONS = ("001", "002", "003")
 MANIFEST = Path(__file__).with_name("schema_003.json")
-TABLES = ("profiles", "reports", "report_photos", "vehicles", "service_sites", "shifts", "photo_upload_operations")
+TABLES = ("profiles", "reports", "report_photos", "vehicles", "service_sites", "shifts", "photo_upload_operations",
+          "events", "event_reports", "grouping_decisions", "route_plans", "route_stops", "stop_incidents")
 
 QUERIES = {
     "tables": """SELECT c.relname AS table_name,c.relkind,c.relpersistence,
@@ -81,7 +83,7 @@ class SchemaCheckError(RuntimeError):
     """Only stable public codes/messages. Never attach raw driver exceptions."""
     def __init__(self, code):
         self.code = code
-        super().__init__("Servicio no preparado: no se pudo verificar el esquema requerido 003")
+        super().__init__("Servicio no preparado: no se pudo verificar el esquema requerido 001+002+003")
 
 
 def capture_catalog(engine):
@@ -108,8 +110,18 @@ def load_manifest():
         tables = {row["table_name"] for row in catalog["tables"]}
         names = {row["conname"] for row in catalog["constraints"]}
         required = {"shifts_vehicle_no_overlap", "shifts_driver_no_overlap",
-                    "report_photos_slot_valid", "report_photos_report_slot_key", "photo_operation_owned_path"}
-        if manifest["schema"] != REQUIRED_SCHEMA or tables != set(TABLES) or not required <= names:
+                    "report_photos_slot_valid", "report_photos_report_slot_key", "photo_operation_owned_path",
+                    "events_pkey", "events_state_check", "events_latitude_check", "events_longitude_check",
+                    "events_closed_timestamp", "event_reports_pkey", "event_reports_event_id_fkey",
+                    "event_reports_report_id_fkey", "event_reports_linked_by_fkey",
+                    "grouping_decisions_report_id_fkey", "grouping_decisions_resulting_event_id_fkey",
+                    "grouping_decisions_decided_by_fkey", "grouping_decisions_decision_check",
+                    "route_plans_pkey", "route_plans_shift_id_fkey", "route_plans_created_by_fkey",
+                    "route_stops_route_plan_id_fkey", "route_stops_event_id_fkey",
+                    "route_stops_route_plan_id_event_id_key", "route_stops_route_plan_id_stop_order_key",
+                    "route_stops_stop_order_check"}
+        if (manifest["schema"] != REQUIRED_SCHEMA or manifest.get("required_migrations") != list(REQUIRED_MIGRATIONS)
+                or tables != set(TABLES) or not required <= names):
             raise ValueError("Invalid manifest")
         if set(catalog) != set(QUERIES):
             raise ValueError("Incomplete manifest")

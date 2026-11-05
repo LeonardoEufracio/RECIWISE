@@ -16,10 +16,30 @@ from app.db_errors import diagnostics
 from app.models import PhotoUploadOperation, Report, ReportPhoto
 from app.security import Actor
 from concurrency_support import FakeStorage, ISOLATED_ONLY, pg_case
-from isolated_postgres import connection
+from isolated_postgres import ROOT, connection
 
 pytestmark = ISOLATED_ONLY
 IMAGE = b"\xff\xd8\xffsynthetic-image"
+
+
+def test_manual_photo_diagnostic_is_read_only_and_matches_migrated_columns(pg_case):
+    """Only syntax/read-only evidence; remote IDs are absent in the disposable DB."""
+    db = connection()
+    try:
+        before = db.execute("SELECT count(*) FROM public.report_photos").fetchone()[0]
+        cursor = db.execute((ROOT / "scripts/sql/diagnostico_fotos_20261104.sql").read_text(encoding="utf-8"), prepare=False)
+        results = []
+        while True:
+            if cursor.description is not None:
+                results.append(cursor.fetchall())
+            if not cursor.nextset():
+                break
+        assert results[0] == [("on",)]
+        assert len(results[1]) == 2 and all(row[2] is False for row in results[1])
+        assert results[2] == [] and results[3] == []
+        assert db.execute("SELECT count(*) FROM public.report_photos").fetchone()[0] == before
+    finally:
+        db.rollback(); db.close()
 
 
 @pytest.fixture

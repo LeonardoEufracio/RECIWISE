@@ -16,11 +16,13 @@ from concurrency_support import ISOLATED_ONLY
 from postgres_support import snapshot
 from test_migration_003 import UP, legacy_database
 from test_photo_restart import api_worker
+from isolated_postgres import ROOT
 
 
 @pytest.fixture
 def guarded_database(monkeypatch):
     with legacy_database(monkeypatch) as (conn, profiles):
+        conn.execute((ROOT / "migrations/002_sprint2_3_estructura.sql").read_text(encoding="utf-8"))
         conn.execute(UP)
         url = URL.create("postgresql+psycopg", username="postgres", host=conn.info.host,
                          port=conn.info.port, database=conn.info.dbname)
@@ -68,6 +70,30 @@ def test_001_without_003_is_rejected_without_migration(monkeypatch):
             engine.dispose()
 
 
+@ISOLATED_ONLY
+@pytest.mark.parametrize("missing", ["002", "003"])
+def test_route_backend_refuses_missing_required_migration_without_writes(monkeypatch, missing):
+    with legacy_database(monkeypatch) as (conn, _):
+        if missing == "002":
+            conn.execute(UP)
+        else:
+            conn.execute((ROOT / "migrations/002_sprint2_3_estructura.sql").read_text(encoding="utf-8"))
+        engine = create_engine(URL.create("postgresql+psycopg", username="postgres", host=conn.info.host,
+                                         port=conn.info.port, database=conn.info.dbname))
+        monkeypatch.setattr(main, "get_engine", lambda: engine)
+        before = snapshot(conn)
+        presence = conn.execute("SELECT to_regclass('public.route_plans'),to_regclass('public.route_stops'),to_regclass('public.photo_upload_operations')").fetchone()
+        try:
+            with pytest.raises(SchemaCheckError) as exc:
+                with TestClient(main.app):
+                    pytest.fail("Missing required migration cannot accept traffic")
+            assert exc.value.code == "schema_incompatible"
+            assert snapshot(conn) == before
+            assert conn.execute("SELECT to_regclass('public.route_plans'),to_regclass('public.route_stops'),to_regclass('public.photo_upload_operations')").fetchone() == presence
+        finally:
+            engine.dispose()
+
+
 MUTATIONS = [
     ("missing-vehicle-exclusion", "ALTER TABLE public.shifts DROP CONSTRAINT shifts_vehicle_no_overlap"),
     ("wrong-driver-resource", """ALTER TABLE public.shifts DROP CONSTRAINT shifts_driver_no_overlap;
@@ -99,6 +125,18 @@ MUTATIONS = [
     ("journal-rls-disabled", "ALTER TABLE public.photo_upload_operations DISABLE ROW LEVEL SECURITY"),
     ("journal-access-granted", "GRANT SELECT ON public.photo_upload_operations TO anon"),
     ("journal-fk-enforcement-disabled", "ALTER TABLE public.photo_upload_operations DISABLE TRIGGER ALL"),
+    ("event-state-check-missing", "ALTER TABLE public.events DROP CONSTRAINT events_state_check"),
+    ("event-coordinate-check-missing", "ALTER TABLE public.events DROP CONSTRAINT events_latitude_check"),
+    ("event-report-uniqueness-missing", "ALTER TABLE public.event_reports DROP CONSTRAINT event_reports_pkey"),
+    ("event-audit-fk-missing", "ALTER TABLE public.grouping_decisions DROP CONSTRAINT grouping_decisions_decided_by_fkey"),
+    ("event-rls-disabled", "ALTER TABLE public.events DISABLE ROW LEVEL SECURITY"),
+    ("event-access-granted", "GRANT SELECT ON public.event_reports TO authenticated"),
+    ("route-unique-order-missing", "ALTER TABLE public.route_stops DROP CONSTRAINT route_stops_route_plan_id_stop_order_key"),
+    ("route-event-fk-missing", "ALTER TABLE public.route_stops DROP CONSTRAINT route_stops_event_id_fkey"),
+    ("route-state-check-missing", "ALTER TABLE public.route_plans DROP CONSTRAINT route_plans_status_check"),
+    ("route-approval-exclusion-missing", "DROP INDEX public.one_approved_plan_per_shift"),
+    ("route-rls-disabled", "ALTER TABLE public.route_plans DISABLE ROW LEVEL SECURITY"),
+    ("route-client-access-granted", "GRANT SELECT ON public.route_stops TO authenticated"),
 ]
 
 
@@ -141,6 +179,21 @@ def test_guard_reads_only_and_always_rolls_back(guarded_database):
     assert statements[0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
     assert all(sql.lstrip().split()[0] in {"SET", "SHOW", "SELECT"} for sql in statements)
     assert capture_catalog(engine) == catalog and snapshot(conn) == before
+
+
+@ISOLATED_ONLY
+def test_missing_events_structure_refuses_startup(guarded_database):
+    conn, _, _, _ = guarded_database
+    before = snapshot(conn)
+    conn.execute("ALTER TABLE public.events RENAME TO events_missing")
+    try:
+        with pytest.raises(SchemaCheckError) as exc:
+            with TestClient(main.app):
+                pytest.fail("Events structure must exist before accepting business traffic")
+        assert exc.value.code == "schema_incompatible"
+    finally:
+        conn.execute("ALTER TABLE public.events_missing RENAME TO events")
+    assert snapshot(conn) == before
 
 
 @ISOLATED_ONLY

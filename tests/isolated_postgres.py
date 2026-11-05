@@ -19,7 +19,7 @@ def connection(url=None, *, verify=True):
             or not marker or target.database != "reciwise_test_" + marker):
         raise RuntimeError("Refusing a database without the isolated localhost identity")
     conn = psycopg.connect(host=target.host, port=target.port, dbname=target.database,
-                           user=target.username, autocommit=True, connect_timeout=5)
+                           user=target.username, password=target.password, autocommit=True, connect_timeout=5)
     if verify:
         try:
             row = conn.execute("SELECT token FROM public.reciwise_test_environment").fetchone()
@@ -46,6 +46,7 @@ def bootstrap(url, *, migrated=True, roles=True):
                      (os.environ["RECIWISE_ISOLATED_TOKEN"],))
         conn.execute((ROOT / "migrations/001_sprint1.sql").read_text(encoding="utf-8"))
         if migrated:
+            conn.execute((ROOT / "migrations/002_sprint2_3_estructura.sql").read_text(encoding="utf-8"))
             conn.execute((ROOT / "migrations/003_sprint1_concurrencia.sql").read_text(encoding="utf-8"))
         profiles = {}
         for name, role in [("citizen", "ciudadano"), ("manager", "encargado_municipal"),

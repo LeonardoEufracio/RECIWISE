@@ -15,6 +15,7 @@ frontend/.env*
 _actualizacion_sprint1/
 d3/output/comparaciones_*.csv
 .test-artifacts/
+.localdev/
 .venv-d3/
 
 # Local configuration and private credentials. Templates still require review.

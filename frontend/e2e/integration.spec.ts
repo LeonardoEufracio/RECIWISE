@@ -209,6 +209,7 @@ test('encargado: puntos Leaflet, filtro y vista móvil con servicios simulados',
     throw new Error(`Ruta inesperada: ${url.pathname}`)
   })
   await login(page)
+  await page.getByRole('button', { name: 'Reportes ciudadanos', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Reportes municipales' })).toBeVisible()
   await expect(page.locator('.map .leaflet-interactive')).toHaveCount(1)
   await expect(page.getByRole('button', { name: 'Registrar reporte', exact: true })).toHaveCount(0)

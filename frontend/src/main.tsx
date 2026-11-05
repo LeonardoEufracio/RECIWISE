@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { createClient } from '@supabase/supabase-js'
 import App from './App'
 import { readConfig } from './config'
+import { mayUseDemo } from './municipal/services'
 import 'leaflet/dist/leaflet.css'
 import './styles.css'
 
@@ -12,5 +13,5 @@ const supabase = errors.length ? null : createClient(config.supabaseUrl, config.
 })
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode><App supabase={supabase} config={config} configErrors={errors} /></StrictMode>,
+  <StrictMode><App supabase={supabase} config={config} configErrors={errors} demoAvailable={mayUseDemo(import.meta.env.DEV, import.meta.env.VITE_ENABLE_DEMO)} /></StrictMode>,
 )

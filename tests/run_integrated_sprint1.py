@@ -79,6 +79,10 @@ def run():
     env.update(CORS_ORIGINS=ui, RECIWISE_INTEGRATED_API_PORT=str(api_port),
                RECIWISE_INTEGRATED_API_URL=api, RECIWISE_INTEGRATED_UI_URL=ui,
                RECIWISE_INTEGRATED_ARTIFACT=str(artifact))
+    from execution_browser_fixture import seed
+    execution_fixture = seed(profiles)
+    env["RECIWISE_EXECUTION_FIXTURE_ID"] = execution_fixture["id"]
+    (artifact / "execution-authorization-fixture.json").write_text(json.dumps(execution_fixture, indent=2), encoding="utf-8")
     with LocalServices(profiles, ui).serve() as services:
         env.update(SUPABASE_URL=services.base, SUPABASE_SERVICE_ROLE_KEY="isolated-test-only",
             STORAGE_BUCKET="reciwise-reportes", RECIWISE_INTEGRATED_SERVICES_URL=services.base,
@@ -139,7 +143,7 @@ def run():
                 if target.is_file():
                     target.write_text(redact(target.read_text(encoding="utf-8"), secret_values), encoding="utf-8")
             print("Browser integration: exit " + str(result.returncode), flush=True)
-            summary = {"postgresql": "real isolated 001+003", "fastapi": "real HTTP; production JWT/schema guard",
+            summary = {"postgresql": "real isolated 001+002+003", "fastapi": "real HTTP; production JWT/schema guard",
                 "react_leaflet_browser": "real Chrome", "auth": "local simulator; ephemeral ES256 and HTTP JWKS",
                 "storage": "local HTTP simulator", "tiles": "simulated; no external downloads",
                 "jwks_fetches": services.jwks_fetches, "logins": services.logins,
@@ -160,6 +164,10 @@ def run():
 if __name__ == "__main__":
     try:
         raise SystemExit(run())
-    except Exception:
+    except Exception as exc:
+        import traceback
+        frames = [f for f in traceback.extract_tb(exc.__traceback__) if Path(f.filename).resolve().is_relative_to(ROOT / "tests")]
+        location = Path(frames[-1].filename).name + ":" + str(frames[-1].lineno) if frames else "runner"
+        print("Safe integration diagnostic: " + type(exc).__name__ + " at " + location, flush=True)
         print("Integrated runner failed safely; inspect test readiness/results without project secrets.", flush=True)
         raise SystemExit(2) from None

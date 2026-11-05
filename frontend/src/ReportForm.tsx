@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import type { Api } from './api'
 import type { Report, ReportLocation } from './types'
 import { localDateTime, reportPayload } from './reportPayload'
@@ -10,9 +10,12 @@ export default function ReportForm({ api, onCreated }: { api: Api; onCreated: (r
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const lock = useRef(false)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (lock.current) return
+    lock.current = true
     const form = event.currentTarget
     setError(''); setMessage('')
     setBusy(true)
@@ -23,7 +26,7 @@ export default function ReportForm({ api, onCreated }: { api: Api; onCreated: (r
       setMessage(`Reporte registrado (${report.id}). Puedes añadir fotografías en el listado inferior.`)
       onCreated(report)
     } catch (err) { setError((err as Error).message) }
-    finally { setBusy(false) }
+    finally { lock.current = false; setBusy(false) }
   }
 
   return <section className="panel">

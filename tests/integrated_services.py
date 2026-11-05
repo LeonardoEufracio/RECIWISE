@@ -47,6 +47,7 @@ class LocalServices:
         guard = connection()
         guard.close()
         self.profiles, self.origin = profiles, origin
+        self.origins = {origin}
         self.password = secrets.token_urlsafe(24)
         self.control = secrets.token_urlsafe(32)
         self.key = ec.generate_private_key(ec.SECP256R1())
@@ -86,7 +87,7 @@ class LocalServices:
             return active
 
     @contextmanager
-    def serve(self):
+    def serve(self, port=0):
         services = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -96,7 +97,7 @@ class LocalServices:
             def send(self, code, data, content_type="application/json"):
                 raw = json.dumps(data, default=str).encode() if content_type == "application/json" else data
                 self.send_response(code)
-                if self.headers.get("Origin") == services.origin:
+                if self.headers.get("Origin") in services.origins:
                     self.send_header("Access-Control-Allow-Origin", services.origin)
                 self.send_header("Content-Type", content_type)
                 self.send_header("Content-Length", str(len(raw)))
@@ -108,7 +109,7 @@ class LocalServices:
 
             def do_OPTIONS(self):
                 self.send_response(204)
-                if self.headers.get("Origin") == services.origin:
+                if self.headers.get("Origin") in services.origins:
                     self.send_header("Access-Control-Allow-Origin", services.origin)
                     self.send_header("Access-Control-Allow-Methods", "GET,POST,DELETE")
                     self.send_header("Access-Control-Allow-Headers",
@@ -224,7 +225,7 @@ class LocalServices:
                     services.deletions.append(paths[0])
                 return self.send(200, [])
 
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
         self.base = "http://127.0.0.1:" + str(server.server_port)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()

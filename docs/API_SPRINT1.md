@@ -4,9 +4,11 @@ Fecha de documentación y comprobación automatizada: **29 de octubre de 2026**.
 
 Este documento describe lo implementado y la evidencia disponible. **No declara cerrado el Sprint 1.** Las pruebas manuales comunicadas por el responsable D2 se distinguen de las pruebas automatizadas ejecutadas para esta documentación.
 
-**Preparación del despliegue: sigue NO-GO para aplicar 003 al Supabase compartido.** La guardia de **FastAPI está implementada en 6.10**, y la del ejecutor del conciliador, junto con su operación segura, en **6.11**. Continúan pendientes Storage real, respaldo/restauración y preparación operativa del despliegue. En estas dos implementaciones no se contactó Supabase compartido; solo se usó PostgreSQL aislado. La lectura compartida de 6.9 es evidencia histórica READ ONLY.
+**Actualización comunicada el 04/11/2026:** el usuario confirmó la aplicación manual de **002 y 003 mediante Supabase SQL Editor**. Codex no ejecutó esas migraciones ni accedió al principal durante la preparación de esta publicación. Aplicar SQL manualmente no demuestra que el historial de Supabase CLI esté reconciliado: queda pendiente comparar esquema, archivos y versiones registradas antes de una futura operación de la CLI. No se debe repetir automáticamente 002/003 para resolver ese historial. Véase [PUBLICACION_FULLSTACK_20261104.md](PUBLICACION_FULLSTACK_20261104.md). Se mantiene **NO-GO para un nuevo despliegue sin revisión**; esta publicación solo respalda código para revisión.
 
-**Decisión vigente del responsable (29/10/2026):** no crear RECIWISE-TEST por ahora; conservar el proyecto principal para la aplicación, sin aplicar 003 ni ejecutar pruebas destructivas allí. Reutilizar PostgreSQL local aislado y servicios simulados. **GO para desarrollo local; NO-GO para desplegar el backend nuevo/003 en el principal.** Las pruebas de Storage real quedan pendientes, sin bloquear funciones independientes. Ver **6.12** y [prioridades D2 para la hackatón del 19 de noviembre](PLAN_D2_HACKATON.md); esta decisión reemplaza los pasos de crear otro proyecto como requisito inmediato de trabajo, no elimina los controles del despliegue.
+**Preparación del despliegue, auditoría histórica del 29/10: NO-GO entonces para aplicar 003 al Supabase compartido.** La guardia de **FastAPI está implementada en 6.10**, y la del ejecutor del conciliador, junto con su operación segura, en **6.11**. Storage real, respaldo/restauración y preparación operativa no quedan validados por la aplicación manual de SQL. En estas dos implementaciones no se contactó Supabase compartido; solo se usó PostgreSQL aislado. La lectura compartida de 6.9 es evidencia histórica READ ONLY.
+
+**Decisión histórica del responsable (29/10/2026):** no crear RECIWISE-TEST por ahora; conservar el proyecto principal para la aplicación, entonces sin aplicar 003 ni ejecutar pruebas destructivas allí. Reutilizar PostgreSQL local aislado y servicios simulados. **GO para desarrollo local; NO-GO para desplegar el backend nuevo/003 en el principal en esa revisión.** Las pruebas de Storage real quedan pendientes, sin bloquear funciones independientes. Ver **6.12** y [prioridades D2 para la hackatón del 19 de noviembre](PLAN_D2_HACKATON.md); esa decisión reemplazó los pasos de crear otro proyecto como requisito inmediato de trabajo, sin eliminar los controles del despliegue. La aplicación manual posterior figura en la actualización del 04/11 anterior.
 
 **Prueba integrada posterior, 6.13:** recorrido React → FastAPI → PostgreSQL → mapa municipal comprobado con JWT ES256 y Storage de pruebas por HTTP local. **4 escenarios de navegador aprobados**, frontend **39 pruebas/tipos/build correctos** y regresión D2 **273 aprobadas, 12 omitidas, cero fallos/errores**. Listo para revisión de aceptación funcional **en entorno local aislado**, sin declarar aceptación del despliegue ni cierre del Sprint.
 
@@ -1537,3 +1539,76 @@ Las 15 operaciones solicitadas están presentes. No se encontró una ausencia de
 - [ ] Confirmar aplicación de la migración 002 cuando se vaya a utilizar; no se ejecuta por el solo hecho de documentarla.
 
 **Estado de alcance:** concurrencia/consistencia, guardia y conciliador verificados en PostgreSQL aislado; nueva prueba integrada UI/API/BD ejecutada en 6.13. **273 pruebas D2 aprobadas y 12 omitidas, 39 frontend y 4 integradas aprobadas; cero fallos/errores finales, tipos/build correctos.** Se conservan producción backend/frontend, contratos, migraciones, IA, credenciales y cambios previos. No se consultó ni migró Supabase compartido; no hubo commits, push ni tareas reales. **Listo para revisión de aceptación funcional local; GO para Sprint 2 local, NO-GO para 003/despliegue de la rama en el principal.** Pendientes: firma del responsable, entorno persistente/móvil de demo, servicios reales y preparación del despliegue. **No se declara terminado el Sprint 1.**
+
+## 9. Incremento posterior: eventos de Sprint 2 D2
+
+El 30 de octubre de 2026 se incorporaron GET /municipal/events, GET /municipal/events/{event_id},
+GET /municipal/events/{event_id}/reports y POST /municipal/events, con rol municipal,
+paginación, vínculos iniciales manuales y auditoría atómica, sin modificar reports.status.
+El contrato, JSON, archivos, diferencias con el modelo frontend y entrega a D1 están en
+[API_EVENTOS_SPRINT2_D2.md](API_EVENTOS_SPRINT2_D2.md).
+
+Se reutilizan events/event_reports/grouping_decisions de 001; no se modifican 001, 002 ni 003,
+ni se necesita una migración nueva o 002 para estos endpoints. La guardia y su manifiesto
+incluyen ahora esas tres tablas; los requisitos anteriores se conservan.
+El manifiesto se obtuvo únicamente de 001+003 en Docker local desechable.
+
+Suite D2 final: **353 aprobadas, 0 fallidas y 12 omitidas** (97.11 s).
+Son las 273 anteriores más 73 de eventos y 7 de guardia. Los casos nuevos utilizan PostgreSQL
+real aislado; los casos JWT usan claves efímeras y JWKS local en memoria, sin Supabase Auth real.
+La suite histórica también conserva pruebas unitarias SQLite, diferenciadas en la documentación.
+Las doce omisiones históricas no se han resuelto ni marcado aprobadas.
+Evidencia: .test-artifacts/reciwise-d2-test-34504b8066194a688ec77d56da50e517/.
+
+El frontend permanece intacto y su sección de eventos todavía espera que D1 sustituya la
+simulación por estos endpoints. No hay IA, agrupación automática, rutas ni prioridad calculada.
+Se mantiene **NO-GO** para aplicar 003/desplegar en Supabase compartido; no hubo acceso,
+migraciones, cambios de datos o credenciales allí, ni push/merge. Esto no declara cerrado Sprint 1.
+
+## 10. Revisión municipal de agrupaciones · Sprint 2
+
+El incremento se documenta en [API_AGRUPACIONES_SPRINT2_D2.md](API_AGRUPACIONES_SPRINT2_D2.md).
+Agrega consulta de relaciones, candidatos manuales e historial y un único POST de decisiones.
+Confirma, corrige, separa, mantiene separado o registra revisión sin cambiar el reporte original.
+Reutiliza 001 y la guardia 003; no hay una migración nueva ni modificaciones de esquema.
+
+Las escrituras bloquean reporte/eventos, comprueban asociación y decisión esperadas y
+confirman vínculo/auditoría juntos. operation_id permite resolver reintentos y commit incierto.
+El alta de eventos ahora rechaza reportes con historial: deben usar la revisión explícita.
+No se reescriben decisiones antiguas; el evento anterior de las nuevas se conserva en JSONB.
+
+**Resultado final: 464 aprobadas, 0 fallidas y 12 omitidas**, 112.35 s.
+Son las 353 anteriores más 31 pruebas unitarias de contrato y 80 de integración PostgreSQL.
+La fase específica termina con 111 aprobadas. Las omisiones históricas continúan pendientes.
+Evidencia final: .test-artifacts/reciwise-d2-test-ab221a578c66456aa4ed57b3ab350f7a/.
+
+Se probó el recorrido API con reporte creado mediante JWT ciudadano verificable, revisión
+municipal e historial, usando PostgreSQL 17.11 aislado y JWKS local ficticio.
+No es una prueba de navegador ni de Supabase Auth/Storage reales.
+Frontend, D3, credenciales y migraciones se conservaron sin cambios en este incremento.
+No hubo push, merge ni despliegue. Se mantiene NO-GO para Supabase compartido
+y no se declara completado todo el Sprint 2.
+
+## 11. Persistencia de propuestas de rutas · Sprint 2
+
+El contrato de [API_RUTAS_SPRINT2_D2.md](API_RUTAS_SPRINT2_D2.md) incorpora crear/listar/detallar
+propuestas y consultar paradas/exclusiones. Se reutiliza 002 sin modificarla ni crear una migración nueva.
+El runner local aplica 001→002→003; la guardia global ahora exige esas estructuras completas.
+No se ejecutan migraciones en el compartido.
+
+Las propuestas conservan snapshot, configuración, autor validado, limitaciones, procedencia y
+resultados recibidos, con rollback de padre/hijos e idempotencia por UUID.
+No se ejecuta optimización, aprobación, asignación ni atención del chofer.
+Los resultados públicos son de prueba/no verificados; D3 solo podrá entrar por un adaptador
+servidor con procedencia autenticada, todavía pendiente de integración real.
+
+**Regresión D2 final: 595 aprobadas, 0 fallidas y 12 omitidas**, 318.00 s.
+Son 464 previas más 38 unitarias de contrato, 85 de integración PostgreSQL y 8 de guardia.
+La fase routes aprobó 123 casos. Incluye reinicio de dos procesos FastAPI, rollback,
+propuestas alternativas, JWT locales verificables y restricciones PostgreSQL reales.
+No equivale a Supabase Auth/Storage o un motor D3 reales.
+Evidencia: .test-artifacts/reciwise-d2-test-a9ce3f810a634286a98e6b9e261d66e8/.
+
+Frontend, módulos IA/D3, .env, credenciales y migraciones existentes permanecen intactos.
+Las doce omisiones históricas continúan pendientes. Se conserva NO-GO para el despliegue
+compartido, sin push/merge ni tareas reales. Este incremento no cierra todo el Sprint 2.

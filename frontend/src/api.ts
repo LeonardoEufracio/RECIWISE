@@ -18,6 +18,7 @@ export function createApi(options: {
   baseUrl: string
   getAccessToken: () => Promise<string | null>
   onRequest: (entry: RequestEntry) => void
+  onUnauthorized?: () => void
   fetcher?: typeof fetch
 }) {
   let nextId = 0
@@ -29,21 +30,30 @@ export function createApi(options: {
       const headers = new Headers(init.headers)
       if (authenticated) {
         const token = await options.getAccessToken()
-        if (!token) throw new ApiError('La sesión ha vencido. Vuelve a iniciar sesión.', null)
+        if (!token) { options.onUnauthorized?.(); throw new ApiError('La sesión ha vencido. Vuelve a iniciar sesión.', null) }
         headers.set('Authorization', `Bearer ${token}`)
       }
       // El navegador agrega el boundary al enviar FormData.
       if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
       const response = await (options.fetcher ?? fetch)(`${options.baseUrl}${path}`, {
         ...init, headers, credentials: 'omit', redirect: 'error',
-        signal: init.signal ?? AbortSignal.timeout(35_000),
+        signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(35_000)]) : AbortSignal.timeout(35_000),
       })
       status = response.status
       const text = await response.text()
       let body: unknown = null
       try { body = text ? JSON.parse(text) : null } catch { /* Error HTTP sin JSON. */ }
       if (!response.ok) {
-        throw new ApiError(errorDetail(body) ?? `FastAPI respondió HTTP ${status}.`, status)
+        if (authenticated && status === 401) options.onUnauthorized?.()
+        const messages: Record<number, string> = {
+          401: 'La sesión ha vencido o no es válida. Inicia sesión nuevamente.',
+          403: 'Tu perfil no tiene permiso para realizar esta operación.',
+          404: 'El recurso solicitado ya no está disponible.',
+          409: 'Existe un conflicto con otra operación. Actualiza la información antes de reintentar.',
+          422: 'Revisa los datos ingresados antes de continuar.',
+          503: 'El servicio no está disponible temporalmente. Comprueba el resultado antes de reintentar una escritura.',
+        }
+        throw new ApiError(errorDetail(body) ?? messages[status] ?? `FastAPI respondió HTTP ${status}.`, status)
       }
       if (body === null && text) throw new ApiError('La API devolvió una respuesta que no es JSON.', status)
       return body as T
